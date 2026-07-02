@@ -1,0 +1,13 @@
+{
+  "name": "ksw-plugins",
+  "owner": {
+    "name": "Kim-soung-won"
+  },
+  "plugins": [
+    {
+      "name": "wiki-manager-plugin",
+      "source": "./plugins/wiki-manager-plugin",
+      "description": "Obsidian vault(agent-knowledge-base)의 노트 캡처와 위키링크 연계를 전담하는 wiki-manager 에이전트"
+    }
+  ]
+}
