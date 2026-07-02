@@ -8,6 +8,11 @@
       "name": "wiki-manager-plugin",
       "source": "./plugins/wiki-manager-plugin",
       "description": "Obsidian vault(agent-knowledge-base)의 노트 캡처와 위키링크 연계를 전담하는 wiki-manager 에이전트"
+    },
+    {
+      "name": "claude-code-docs-plugin",
+      "source": "./plugins/claude-code-docs-plugin",
+      "description": "Claude Code 관련 작업(agents, skills, 문서)을 관리하는 플러그인"
     }
   ]
 }
