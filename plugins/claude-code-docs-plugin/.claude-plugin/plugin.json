@@ -1,7 +1,7 @@
 {
   "name": "claude-code-docs-plugin",
   "description": "Claude Code 관련 작업(agents, skills, 문서)을 관리하는 플러그인",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": {
     "name": "kimsoungwon"
   }

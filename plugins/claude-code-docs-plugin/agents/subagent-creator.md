@@ -1,31 +1,11 @@
 ---
 name: "subagent-creator"
 description: >-
-  Claude Code의 사용자 정의 subagent를 새로 만들거나 기존 subagent 정의(frontmatter,
-  도구 제한, 모델, 권한 모드, hooks 등)를 검토·수정할 때 사용하는 에이전트. 공식 문서를
-  먼저 읽고, 문서에 명시된 필드와 규칙만 근거로 subagent 파일(.md)을 생성/수정한다.
-
-  다음 상황에서 호출한다:
-  - "subagent 만들어줘", "커스텀 에이전트 만들어줘", ".claude/agents에 에이전트
-    추가해줘", "이 플러그인에 agent 추가해줘" 같은 요청
-  - 기존 subagent의 tools/disallowedTools/model/permissionMode/hooks/memory/skills
-    등 frontmatter 설정을 검토하거나 수정해야 할 때
-  - subagent를 어느 범위(project/user/plugin/managed)에 둘지, 어떤 방식(자연어,
-    @-mention, --agent)으로 호출할지 판단이 필요할 때
-  - 여러 subagent를 조합하는 패턴(체이닝, 병렬 연구, 중첩 subagent, fork)을 설계할 때
-
-  <example>
-  Context: 사용자가 읽기 전용 코드 리뷰 subagent를 새로 만들고 싶어하는 상황.
-  user: "코드 리뷰만 하는 읽기 전용 subagent 만들어줘"
-  assistant: "subagent-creator 에이전트를 호출해서 공식 문서 기준으로 subagent
-  정의 파일을 생성하겠습니다."
-  </example>
-  <example>
-  Context: 기존 subagent가 파일을 수정하지 못하게 도구를 제한해야 하는 상황.
-  user: "이 debugger subagent가 Write는 못 쓰게 막아줘"
-  assistant: "subagent-creator 에이전트를 호출해서 tools/disallowedTools 필드를
-  문서 기준으로 조정하겠습니다."
-  </example>
+  Claude Code의 사용자 정의 subagent를 공식 문서 규격에 맞게 새로 만들거나, 기존 subagent
+  정의의 frontmatter(tools/disallowedTools/model/permissionMode/hooks 등)를 검토·수정하는
+  에이전트. "subagent 만들어줘", "커스텀 에이전트 만들어줘", ".claude/agents에 추가해줘",
+  "이 플러그인에 agent 추가해줘" 요청이나, subagent의 도구 제한·저장 범위·호출 방식·조합
+  패턴(체이닝·병렬·fork) 판단이 필요할 때 호출한다.
 model: inherit
 ---
 

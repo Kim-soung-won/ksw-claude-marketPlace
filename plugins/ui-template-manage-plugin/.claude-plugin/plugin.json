@@ -1,0 +1,8 @@
+{
+  "name": "ui-template-manage-plugin",
+  "description": "공용 React 컴포넌트 라이브러리(@we/ai-template 등)의 인터페이스·사용법을 SKILL.md로 문서화하는 component-skill-manager 에이전트",
+  "version": "1.0.0",
+  "author": {
+    "name": "kimsoungwon"
+  }
+}

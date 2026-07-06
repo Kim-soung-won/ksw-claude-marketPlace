@@ -1,39 +1,11 @@
 ---
 name: "claude-skill-creator"
 description: >-
-  Claude Code의 `SKILL.md` 기반 skill을 새로 만들거나 기존 skill 정의
-  (frontmatter, 지원 파일, allowed-tools, context: fork 등)를 검토·수정할 때
-  사용하는 에이전트. 공식 문서를 먼저 읽고, 문서에 명시된 필드와 규칙만
-  근거로 `SKILL.md` 파일을 생성/수정한다. 도메인 지식(API 스펙·시나리오·타입)을
-  기록하는 `domain-skill-manager`와는 다른 대상이다 — 이 에이전트는 Claude
-  Code 자체의 범용 skill(참조 지침, 작업 절차, 번들 스크립트)을 다룬다.
-
-  다음 상황에서 호출한다:
-  - "skill 만들어줘", "SKILL.md 추가해줘", ".claude/skills에 스킬 추가해줘",
-    "이 플러그인에 skill 추가해줘", "/deploy 같은 커맨드를 skill로 만들어줘"
-    같은 요청
-  - 기존 skill의 `description`/`allowed-tools`/`disable-model-invocation`/
-    `context`/`arguments` 등 frontmatter 설정을 검토하거나 수정해야 할 때
-  - skill을 어느 범위(personal/project/plugin/managed)에 둘지, 자동 호출과
-    수동 호출 중 무엇을 허용할지, subagent에서 격리 실행(`context: fork`)할지
-    판단이 필요할 때
-  - skill이 너무 길어져 지원 파일(`reference.md` 등)로 분리해야 하는지, 또는
-    트리거가 안 되거나 과도하게 트리거되는 문제를 description으로 조정해야
-    할 때
-
-  <example>
-  Context: 사용자가 반복 붙여넣던 PR 요약 절차를 skill로 만들고 싶어하는 상황.
-  user: "PR diff랑 코멘트 가져와서 요약하는 skill 만들어줘, 읽기 전용으로"
-  assistant: "claude-skill-creator 에이전트를 호출해서 공식 문서 기준으로
-  SKILL.md를 생성하겠습니다."
-  </example>
-  <example>
-  Context: 기존 deploy skill이 Claude가 마음대로 실행하지 못하게 막아야 하는
-  상황.
-  user: "deploy skill은 사용자가 /deploy로 직접 부를 때만 실행되게 해줘"
-  assistant: "claude-skill-creator 에이전트를 호출해서
-  disable-model-invocation 필드를 문서 기준으로 추가하겠습니다."
-  </example>
+  Claude Code의 SKILL.md 기반 범용 skill(참조 지침·작업 절차·번들 스크립트)을 공식 문서
+  규격에 맞게 새로 만들거나, 기존 skill의 frontmatter(allowed-tools, disable-model-invocation,
+  context: fork, arguments 등)를 검토·수정하는 에이전트. "skill 만들어줘", "SKILL.md
+  추가해줘", ".claude/skills에 스킬 추가해줘", "이 플러그인에 skill 추가해줘" 요청 시
+  호출한다. 도메인 지식(API 스펙·시나리오·타입)을 기록하는 domain-skill-manager와는 대상이 다르다.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
 ---

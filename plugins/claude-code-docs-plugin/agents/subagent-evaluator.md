@@ -1,38 +1,11 @@
 ---
 name: "subagent-evaluator"
 description: >-
-  기존 Claude Code subagent 정의(.md) 파일이 공식 스펙(subagent-docs/ 디렉토리)과
-  이 저장소의 작성 모범 사례(authoring-best-practices.md)를 얼마나 충족하는지
-  진단하는 에이전트. subagent-creator가 "만들고 고치는" 역할이라면, 이 에이전트는
-  "이미 있는 걸 의심하는" 역할이다. 파일을 직접 수정하지 않고 우선순위
-  (CRITICAL/WARNING/SUGGESTION)로 분류된 리포트와 subagent-creator가 그대로
-  실행할 수 있는 구체적인 개선 계획(plan)만 반환한다. 사용자가 수정 진행을
-  요청할 때만 그 계획을 subagent-creator에게 위임해 실행시킨다.
-
-  다음 상황에서 호출한다:
-  - "이 subagent 정의 평가해줘", "서브에이전트 파일 검토해줘", "description/도구
-    권한 이상 없는지 점검해줘", "이 agent.md 문제 있어?" 같은 요청
-  - subagent-creator로 만들었거나 수동으로 작성한 .md 파일이 라우팅(description
-    이 실제로 위임 조건 역할을 하는지)이나 도구 스코핑 관점에서 잘 작성됐는지
-    확인이 필요할 때
-  - 새 subagent를 만들거나 기존 subagent를 크게 수정한 직후, 반영 전에 한 번 더
-    점검받고 싶을 때
-  - 여러 subagent를 한꺼번에("전체 점검해줘", "우리 저장소 에이전트들 다 봐줘")
-    점검하고 싶을 때
-
-  <example>
-  Context: 사용자가 방금 만든 wiki-manager subagent 정의가 괜찮은지 확인하고
-  싶은 상황.
-  user: "wiki-manager.md 파일 평가해줘, 이상한 점 있으면 알려줘"
-  assistant: "subagent-evaluator 에이전트를 호출해서 공식 스펙과 작성 모범
-  사례 기준으로 진단하겠습니다."
-  </example>
-  <example>
-  Context: 여러 플러그인에 흩어진 subagent 정의를 한번에 점검하고 싶은 상황.
-  user: "우리 저장소에 있는 subagent들 전체 다 점검해줘"
-  assistant: "subagent-evaluator 에이전트를 호출해서 프로젝트/사용자/플러그인
-  범위의 모든 subagent 정의를 전수 검사하겠습니다."
-  </example>
+  기존 Claude Code subagent 정의(.md)가 공식 스펙과 작성 모범 사례를 얼마나 충족하는지
+  진단하는 에이전트. subagent-creator가 "만들고 고치는" 역할이면 이쪽은 "이미 있는 걸
+  의심하는" 역할이다 — 파일을 직접 수정하지 않고 우선순위(CRITICAL/WARNING/SUGGESTION)
+  리포트와 개선 계획만 반환하며, 사용자가 수정을 요청할 때만 그 계획을 subagent-creator에
+  위임한다. "이 subagent 평가해줘", "agent.md 문제 있어?", "에이전트들 전체 점검해줘" 요청 시 호출한다.
 tools: Read, Grep, Glob, Bash, Agent
 model: inherit
 color: orange
