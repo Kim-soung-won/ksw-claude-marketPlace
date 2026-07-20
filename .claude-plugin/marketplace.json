@@ -23,6 +23,11 @@
       "name": "ui-template-manage-plugin",
       "source": "./plugins/ui-template-manage-plugin",
       "description": "공용 React 컴포넌트 라이브러리(@we/ai-template 등)의 인터페이스·사용법을 SKILL.md로 문서화하는 component-skill-manager 에이전트"
+    },
+    {
+      "name": "frontend-support-plugin",
+      "source": "./plugins/frontend-support-plugin",
+      "description": "FrontEnd 개발을 보조하는 플러그인 — 익숙한 프론트엔드 디자인 패턴·방법론(FSD 등)을 숙지한 에이전트·스킬을 관리한다"
     }
   ]
 }
