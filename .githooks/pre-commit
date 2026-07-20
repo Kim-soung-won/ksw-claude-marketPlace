@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# pre-commit — 명시 버전(explicit version) 표준 강제 훅.
+#
+# 어떤 플러그인의 파일이 스테이징됐는데 그 플러그인의
+# plugins/<name>/.claude-plugin/plugin.json 의 "version" 이 직전 커밋(HEAD)과
+# 동일하다면(= 올리지 않았다면), patch 버전을 자동으로 +1 하고 다시 스테이징한다.
+#
+# - 명시 버전 방식에서는 version 을 올려야만 사용자 측 /plugin update 로 갱신되므로,
+#   "파일만 고치고 버전은 그대로" 인 커밋을 막기 위한 안전장치다.
+# - 이미 버전을 올렸거나(HEAD와 다름), 신규 플러그인(HEAD에 없음)이면 그대로 둔다.
+
+repo_root="$(git rev-parse --show-toplevel)" || exit 0
+cd "$repo_root" || exit 0
+
+get_version() {
+  grep -oE '"version"[[:space:]]*:[[:space:]]*"[^"]*"' \
+    | head -n1 \
+    | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/'
+}
+
+# 스테이징된 파일에서 영향받은 플러그인 이름 수집 (삭제 포함 → diff-filter 미지정)
+plugins_changed="$(
+  git diff --cached --name-only \
+    | grep -E '^plugins/[^/]+/' \
+    | sed -E 's#^plugins/([^/]+)/.*#\1#' \
+    | sort -u
+)"
+
+[ -z "$plugins_changed" ] && exit 0
+
+while IFS= read -r plugin; do
+  [ -z "$plugin" ] && continue
+  manifest="plugins/$plugin/.claude-plugin/plugin.json"
+  [ -f "$manifest" ] || continue   # 매니페스트 없는 디렉토리는 건너뜀
+
+  head_ver="$(git show "HEAD:$manifest" 2>/dev/null | get_version)"
+  staged_ver="$(git show ":$manifest" 2>/dev/null | get_version)"
+
+  # 신규 플러그인(직전 커밋에 매니페스트 없음)은 그대로 둔다
+  [ -z "$head_ver" ] && continue
+
+  # 이미 버전이 바뀌었으면 통과
+  if [ -n "$staged_ver" ] && [ "$staged_ver" != "$head_ver" ]; then
+    continue
+  fi
+
+  # 버전 미변경 → HEAD 버전 기준 patch +1
+  major="${head_ver%%.*}"
+  rest="${head_ver#*.}"
+  minor="${rest%%.*}"
+  patch="${rest#*.}"
+  patch_num="$(printf '%s' "$patch" | grep -oE '^[0-9]+')"
+  [ -z "$patch_num" ] && patch_num=0
+  new_ver="${major}.${minor}.$((patch_num + 1))"
+
+  sed -E "0,/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/ s//\"version\": \"$new_ver\"/" \
+    "$manifest" > "$manifest.tmp" && mv "$manifest.tmp" "$manifest"
+  git add "$manifest"
+  echo "pre-commit: $plugin version $head_ver -> $new_ver (파일 변경됨, version 미수정 → 자동 상승)"
+done <<EOF
+$plugins_changed
+EOF
+
+exit 0
