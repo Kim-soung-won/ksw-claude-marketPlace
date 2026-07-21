@@ -1,7 +1,7 @@
 {
   "name": "frontend-support-plugin",
   "description": "FrontEnd 개발을 보조하는 플러그인 — 익숙한 프론트엔드 디자인 패턴·방법론(FSD 등)을 숙지한 에이전트와 스킬을 관리한다",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "kimsoungwon"
   }
