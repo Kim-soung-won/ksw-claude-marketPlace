@@ -6,6 +6,7 @@ description: >-
   에이전트. "subagent 만들어줘", "커스텀 에이전트 만들어줘", ".claude/agents에 추가해줘",
   "이 플러그인에 agent 추가해줘" 요청이나, subagent의 도구 제한·저장 범위·호출 방식·조합
   패턴(체이닝·병렬·fork) 판단이 필요할 때 호출한다.
+tools: Read, Write, Edit, Grep, Glob
 model: inherit
 ---
 
