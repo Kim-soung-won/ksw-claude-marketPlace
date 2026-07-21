@@ -13,6 +13,28 @@
 repo_root="$(git rev-parse --show-toplevel)" || exit 0
 cd "$repo_root" || exit 0
 
+# 정의 파일 검증기 실행.
+#
+# 빌드가 없는 저장소이므로 이 훅이 유일한 자동 검증 지점이다.
+# ERROR 가 있으면 커밋을 막고, WARN 은 출력만 하고 통과시킨다.
+# 우회가 필요하면 SKIP_VALIDATE=1 git commit ... 또는 --no-verify.
+run_validators() {
+  [ -n "$SKIP_VALIDATE" ] && return 0
+  command -v node >/dev/null 2>&1 || {
+    echo "pre-commit: node 없음 — 정의 검증 건너뜀"
+    return 0
+  }
+  [ -f scripts/validate-all.js ] || return 0
+
+  if ! node scripts/validate-all.js; then
+    echo ""
+    echo "pre-commit: 정의 검증 실패 — 커밋을 중단한다."
+    echo "            우회하려면 SKIP_VALIDATE=1 git commit ... 를 쓴다."
+    return 1
+  fi
+  return 0
+}
+
 get_version() {
   grep -oE '"version"[[:space:]]*:[[:space:]]*"[^"]*"' \
     | head -n1 \
@@ -27,7 +49,10 @@ plugins_changed="$(
     | sort -u
 )"
 
-[ -z "$plugins_changed" ] && exit 0
+if [ -z "$plugins_changed" ]; then
+  run_validators
+  exit $?
+fi
 
 while IFS= read -r plugin; do
   [ -z "$plugin" ] && continue
@@ -62,4 +87,6 @@ done <<EOF
 $plugins_changed
 EOF
 
-exit 0
+# 버전 상승까지 끝난 뒤 검증한다 — 훅이 방금 고친 plugin.json 도 검사 대상이다.
+run_validators
+exit $?
