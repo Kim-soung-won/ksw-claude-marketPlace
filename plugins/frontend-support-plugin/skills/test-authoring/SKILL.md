@@ -111,6 +111,11 @@ src/entities/workflow/workflow/node-validator.ts
 순수 함수/스토어 테스트와 달리 "완전 독립·병렬"이 아니다. Provider를 매 파일에서
 직접 조립하지 말고 공용 하니스를 경유한다.
 
+> ⚠️ RTL에는 **인프라 문제가 단언 실패로 위장하는** 함정이 몇 가지 있다(자동
+> cleanup 미등록, `userEvent.setup()`의 클립보드 교체, 접근명이 겹치는 닫기 버튼,
+> `throwOnError` 훅). 단언을 무르게 고쳐 통과시키기 전에
+> [`examples.md`](./examples.md)의 "RTL 실전 함정"을 먼저 확인한다.
+
 ---
 
 ## 검증 규율 — 작성으로 끝내지 않는다
