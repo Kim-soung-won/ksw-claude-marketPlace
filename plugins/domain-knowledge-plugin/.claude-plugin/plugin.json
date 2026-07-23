@@ -1,0 +1,8 @@
+{
+  "name": "domain-knowledge-plugin",
+  "description": "협업자·기획자에게 받은 도메인 지식(API 스펙·시나리오·도메인 규칙)을 트리오 스킬로 포착·감사하는 플러그인",
+  "version": "1.1.0",
+  "author": {
+    "name": "kimsoungwon"
+  }
+}

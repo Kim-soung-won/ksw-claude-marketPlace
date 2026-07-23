@@ -133,6 +133,13 @@ description: Generate descriptive commit messages by analyzing git diffs. Use wh
 모호한 description은 피한다: `"Helps with documents"`, `"Processes data"`,
 `"Does stuff with files"`.
 
+**부정 경계문을 넣지 않는다(1순위 안티패턴 — 아이러니 과정 이론 / '분홍 코끼리 효과').**
+"이 Skill은 X에는 쓰지 않는다", "Y와는 다르다"처럼 배제 대상을 부정문으로 명시하면,
+description은 Skill 발견(트리거)에 쓰이는 텍스트이므로 그 배제 대상의 키워드가 오히려
+이 Skill과 연관되어 **잘못된 트리거**를 부른다. 겹치는 다른 Skill과의 구분은 이 Skill이
+실제로 트리거돼야 하는 파일 유형·작업·키워드를 **긍정형으로 더 구체화**해서 해결하고,
+배제 대상의 이름·키워드는 description에 쓰지 않는다.
+
 ### 점진적 공개 패턴
 
 SKILL.md는 온보딩 가이드의 목차처럼, 필요에 따라 Claude를 상세 자료로

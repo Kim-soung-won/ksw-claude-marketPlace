@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/capture-commit-session.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

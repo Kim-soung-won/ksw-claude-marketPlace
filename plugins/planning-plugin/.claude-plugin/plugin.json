@@ -1,0 +1,8 @@
+{
+  "name": "planning-plugin",
+  "description": "Orchestrator 파이프라인의 실행 계획 수립 에이전트를 관리하는 플러그인 — 코드베이스 변경 계획(change-planner) 등 계획 JSON을 생성한다",
+  "version": "0.1.0",
+  "author": {
+    "name": "kimsoungwon"
+  }
+}
