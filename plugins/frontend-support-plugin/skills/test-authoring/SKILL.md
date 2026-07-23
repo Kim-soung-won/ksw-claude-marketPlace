@@ -3,7 +3,7 @@ name: test-authoring
 description: >-
   프론트엔드 프로젝트에서 vitest 단위 테스트를 작성할 때 따르는 규약.
   "테스트 작성", "단위 테스트 만들어줘", "이 모듈 테스트해줘", "vitest 테스트 추가",
-  "테스트 커버리지", "RTL 테스트", "컴포넌트 테스트", "훅 테스트" 같은 요청·문구에
+  "테스트 커버리지", "컴포넌트 테스트", "훅 테스트" 같은 요청·문구에
   트리거한다. 핵심은 단언(assertion)의 출처를 이원화하는 것이다: 도메인 행위가 있는
   모듈은 프로젝트의 도메인 스킬(`.claude/skills/*_scenario.md`·`*_api.md`·`*_domain.md`)의
   명세에서 기대 동작을 유도하고(구현 코드가 아니라 명세에서 끌어와 change-detector를 회피),
@@ -89,19 +89,23 @@ src/entities/workflow/workflow/node-validator.ts
 
 프로젝트에는 이미 다음이 세팅돼 있다(새로 만들지 않는다).
 
-- `vitest.config.ts`: `@/` → `src` alias, `test/**/*.{test,spec}.{ts,tsx}` 수집,
-  기본 `environment: "node"`.
-- `tsconfig.test.json`: `test`와 `vitest.config.ts`를 포함해 테스트 범위 타입 체크.
+- `vitest.config.ts`: `@/` → `src`, `@test/` → `test` alias,
+  `test/**/*.{test,spec}.{ts,tsx}` 수집, 기본 `environment: "node"`, `setupFiles`.
+- 루트 `tsconfig.json`의 `include`에 `test`가 포함돼 테스트도 함께 타입 체크된다.
+
+> ⚠️ 테스트 전용 `tsconfig.test.json`을 별도로 만들지 않는다. `composite: true`로
+> 분리하면 TS6307("전이적으로 import되는 모든 파일이 include에 있어야 함")로 깨진다.
+> 루트 tsconfig의 `include`에 `test`를 넣는 쪽이 유지 비용이 낮다.
 
 ---
 
 ## 실행 환경 선택 — node vs jsdom
 
-| 대상 | 환경 | 방법 |
-|------|------|------|
-| 순수 함수, 검증 로직 | node (기본) | 추가 설정 없음. DOM 불필요 |
-| zustand 스토어 | node (기본) | `getState()`/`setState()`로 상태 검증. 렌더 불필요 |
-| RTL 컴포넌트/훅 렌더 | jsdom | 파일 **상단**에 `// @vitest-environment jsdom` |
+| 대상                 | 환경        | 방법                                               |
+| -------------------- | ----------- | -------------------------------------------------- |
+| 순수 함수, 검증 로직 | node (기본) | 추가 설정 없음. DOM 불필요                         |
+| zustand 스토어       | node (기본) | `getState()`/`setState()`로 상태 검증. 렌더 불필요 |
+| RTL 컴포넌트/훅 렌더 | jsdom       | 파일 **상단**에 `// @vitest-environment jsdom`     |
 
 ### RTL 주의 — 공용 렌더 하니스가 전제다
 
@@ -127,7 +131,7 @@ src/entities/workflow/workflow/node-validator.ts
    틀렸나. **테스트를 통과시키려고 단언을 무르게 고치지 않는다.**
 3. 스킬 기반 테스트의 실패는 스펙-구현 정합성 시그널이므로, 조용히 넘기지 말고
    판정 결과를 사람에게 보고한다.
-4. 타입은 `tsconfig.test.json` 범위에서 확인된다.
+4. 타입은 루트 `tsconfig.json`의 `include`에 `test`가 들어 있어 함께 확인된다.
 
 ---
 
@@ -156,5 +160,5 @@ src/entities/workflow/workflow/node-validator.ts
 - 스킬 기반 테스트 전에는 **스킬 신뢰도를 먼저** 확인한다(낡은 스킬 = 낡은 테스트).
 - 통과 확인 없이 완료로 보지 않는다. 실패는 판정 대상이지 통과시켜야 할 방해물이
   아니다.
-</content>
-</invoke>
+  </content>
+  </invoke>
