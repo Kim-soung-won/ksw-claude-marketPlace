@@ -1,7 +1,7 @@
 {
   "name": "project-sub-plugin",
   "description": "참여 프로젝트의 협업, 의사소통을 보좌하고 관련 리소스 관리를 보조하는 플러그인",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "kimsoungwon"
   }
