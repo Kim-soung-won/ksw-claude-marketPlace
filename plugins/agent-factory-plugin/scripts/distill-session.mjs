@@ -186,6 +186,7 @@ function distillWindow(entry) {
   return {
     session_id: entry.session_id,
     commit: entry.commit,
+    commit_message: entry.commit_message || null,
     cwd: entry.cwd,
     captured_at: entry.captured_at,
     event_count: events,

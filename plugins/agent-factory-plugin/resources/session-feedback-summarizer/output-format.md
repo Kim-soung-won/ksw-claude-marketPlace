@@ -13,6 +13,7 @@
 ```markdown
 ---
 commit: <full sha>
+commit_subject: <digest.commit_message의 첫 줄. 없으면 생략>
 session_id: <session id>
 captured_at: <ISO8601>
 event_count: <n>

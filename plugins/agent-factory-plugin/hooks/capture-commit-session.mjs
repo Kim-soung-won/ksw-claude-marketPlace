@@ -98,6 +98,9 @@ function main() {
   const gitRoot = safeGit(cwd, ["rev-parse", "--show-toplevel"]);
   if (!gitRoot) return;
   const commit = safeGit(cwd, ["rev-parse", "HEAD"]) || "";
+  const commitMessage = commit
+    ? safeGit(cwd, ["log", "-1", "--pretty=%B", commit]) || ""
+    : "";
 
   const factoryDir = path.join(gitRoot, ".agent-factory");
   fs.mkdirSync(factoryDir, { recursive: true });
@@ -126,6 +129,7 @@ function main() {
   const entry = {
     session_id: sessionId,
     commit,
+    commit_message: commitMessage,
     jsonl_path: jsonlPath,
     from_offset: fromOffset,
     from_uuid: fromUuid,
