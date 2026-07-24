@@ -12,27 +12,27 @@ git commit (Claude가 실행)
         · 훅 입력의 transcript_path로 세션 JSONL 특정, 커밋 sha 기록
         · 직전 커밋 워터마크와의 델타 구간을 큐에 적재 (git_root를 항목에 포함)
         · 커밋 간 중복 오염 없음 (세션이 아니라 "직전 커밋 이후 ~ 이번 커밋"이 단위)
-  ↓  (온디맨드)
+  ↓  (온디맨드 — "세션 피드백 정리해줘")
 session-feedback-summarizer 에이전트
-  └─ scripts/distill-session.mjs --drain --dir <gitRoot>  ← 결정론적 전처리(토큰 절감 지점)
+  1) scripts/distill-session.mjs --drain --dir <gitRoot>   ← 결정론적 전처리(토큰 절감 지점)
         · 큐에서 해당 레포 항목만 뽑는다 (다른 레포 것은 큐에 남는다)
         · 델타 구간을 요약·피드백에 필요한 신호만 남긴 압축 digest로 변환
-        · signature·토큰 장부·파일 덤프·성공 stdout 등 부피 제거
-  └─ digest만 읽고 요약 + 사용 피드백 추출
-  ↓
-~/.agent-factory/sessions/<projectSlug>/<commit>.md        ← 세션 기록 저장(사용자 레벨)
-  ↓
-Stop hook: hooks/push-sessions.mjs                         ← 사용자 레벨 sessions 스캔
-     · 파일 위치가 아니라 metrics/frontmatter의 project_path로 프로젝트 복원
-     · 내용 해시로 이미 보낸 파일은 건너뜀 (~/.agent-factory/state.json)
-     · 설정이 없거나 서버가 죽어 있으면 조용히 넘어감 (항상 exit 0)
+        · timeline 유계화(TIMELINE_LIMIT) + metrics.json 사이드카 저장
+  2) digest만 읽고 요약 → ~/.agent-factory/sessions/<projectSlug>/<commit>.md 저장
+  3) hooks/push-sessions.mjs 실행                          ← 전송 + 정리
+        · 사용자 레벨 sessions 스캔, project_path로 프로젝트 복원해 전송
+        · 미전송분(방금 것 + 이전 실패분) 전송, 내용 해시로 중복 회피
+        · 전송 성공한 .md·metrics.json만 로컬 삭제(실패분은 남겨 다음에 재시도)
+        · 실패는 ~/.agent-factory/errors.jsonl 에 기록
   ↓
 Observer 서버 → Postgres → 대시보드
 ```
 
-업로드 시점이 커밋이 아니라 **세션 종료(Stop)**인 이유: 요약 `.md`는 summarizer가
-커밋보다 나중에 쓰므로 커밋 훅에서는 아직 보낼 것이 없다. 또한 커밋 훅에 네트워크
-I/O를 얹으면 "가볍고 커밋을 막지 않는다"는 그 훅의 규칙이 깨진다.
+**전송·정리를 Stop 훅이 아니라 summarizer 워크플로에서 끝내는 이유**: "정리해줘" 한 번에
+요약→전송→로컬 정리까지 완결돼 타이밍이 명확하고(다음 턴 Stop 을 기다리지 않는다),
+서버 DB 가 진실의 원천이므로 전송 성공분은 로컬에 남길 이유가 없다. 재시도 안전망은
+잃지 않는다 — 실패분은 로컬에 남아 다음 요약 때 push 가 자동 재시도한다. 전송 로직은
+에이전트에 인라인하지 않고 `push-sessions.mjs` 스크립트를 호출해 재사용한다.
 
 ## 저장 구조 — 레포에는 아무것도 남지 않는다
 
@@ -54,8 +54,9 @@ I/O를 얹으면 "가볍고 커밋을 막지 않는다"는 그 훅의 규칙이 
 | `queue.jsonl` | 미처리 델타 큐 (항목마다 `git_root`) |
 | `processed.jsonl` | 처리 완료 로그 |
 | `state.json` | 업로드 완료 해시 (`<repoPath>::<fileName>` 키) |
-| `sessions/<projectSlug>/<commit>.md` | 세션 요약·피드백 기록 |
-| `sessions/<projectSlug>/<sha7>.metrics.json` | 기계 정밀 계량치(에이전트별 토큰·호출·에러) |
+| `errors.jsonl` | 파이프라인 실패 로그(capture·distill·push). 흐름은 안 막고 진단만 — 전송이 안 되면 여기부터 본다 |
+| `sessions/<projectSlug>/<commit>.md` | 세션 요약·피드백 기록 (전송 성공 시 삭제) |
+| `sessions/<projectSlug>/<sha7>.metrics.json` | 기계 정밀 계량치 (전송 성공 시 삭제) |
 
 `<projectSlug>`는 레포 경로 기반 결정론적 슬러그(`<basename>-<경로해시8>`)라, 레포별로
 하위 디렉터리가 갈려 레포 간 sha7 충돌이 없다. 파일이 레포 밖에 있으므로 각 기록은

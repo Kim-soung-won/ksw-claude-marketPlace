@@ -28,7 +28,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { PROCESSED_PATH, QUEUE_PATH, projectSessionsDir } from "../lib/factory-home.mjs";
+import {
+  PROCESSED_PATH,
+  QUEUE_PATH,
+  appendLog,
+  projectSessionsDir,
+} from "../lib/factory-home.mjs";
 
 const TEXT_LIMIT = 600;
 const CMD_LIMIT = 200;
@@ -387,8 +392,9 @@ function writeMetricsSidecar(entry, digest) {
         2,
       ),
     );
-  } catch {
-    /* 사이드카 실패는 흐름을 막지 않는다 — .md 요약은 그대로 나간다 */
+  } catch (err) {
+    // 사이드카 실패는 흐름을 막지 않는다(.md 요약은 그대로 나간다) — 로그만 남긴다.
+    appendLog("distill", `metrics 사이드카 쓰기 실패 (${entry.commit?.slice(0, 7)}): ${err}`);
   }
 }
 
@@ -426,8 +432,9 @@ function drain(gitRoot) {
       digests.push(digest);
       writeMetricsSidecar(entry, digest);
       processed.push({ ...entry, processed: true, distilled_at: new Date().toISOString() });
-    } catch {
+    } catch (err) {
       keep.push(line); // distill 실패 → 큐에 남겨 재시도
+      appendLog("distill", `distill 실패 (${entry.commit?.slice(0, 7) ?? "?"}): ${err}`);
     }
   }
 

@@ -25,6 +25,7 @@ import { execFileSync } from "node:child_process";
 import {
   SESSIONS_DIR,
   STATE_PATH,
+  appendLog,
   ensureHome,
   loadConfig,
   readJson,
@@ -141,6 +142,10 @@ async function main() {
       pending.push({
         key: stateKey(projectPath, fileName),
         hash,
+        // 전송 성공 시 로컬에서 지울 파일들(정리).
+        mdPath: path.join(dir, fileName),
+        metricsPath: metrics ? path.join(dir, metricsName) : null,
+        dir,
         payload: {
           markdown,
           fileName,
@@ -157,7 +162,10 @@ async function main() {
 
   if (pending.length === 0) return;
 
-  // 상한을 넘으면 나머지는 다음 Stop 에서 보낸다(상태를 안 찍었으므로 자연히 재시도된다).
+  // 전송에 성공(created/updated/unchanged)한 항목 — 루프 뒤에서 로컬 파일을 정리한다.
+  const succeeded = [];
+
+  // 상한을 넘으면 나머지는 다음 호출에서 보낸다(상태를 안 찍었으므로 자연히 재시도된다).
   for (let i = 0; i < pending.length; i += MAX_BATCH) {
     const chunk = pending.slice(i, i + MAX_BATCH);
     const controller = new AbortController();
@@ -174,32 +182,73 @@ async function main() {
         body: JSON.stringify({ records: chunk.map((p) => p.payload) }),
         signal: controller.signal,
       });
-    } catch {
-      break; // 네트워크 실패 — 상태를 안 찍었으니 다음에 다시 시도된다
+    } catch (err) {
+      appendLog("push", `network 실패: ${err}`); // 상태를 안 찍었으니 다음에 재시도된다
+      break;
     } finally {
       clearTimeout(timer);
     }
 
-    if (!response.ok) break;
+    if (!response.ok) {
+      appendLog("push", `서버 응답 ${response.status}`);
+      break;
+    }
 
     const body = await response.json().catch(() => null);
     const results = body?.data?.results;
-    if (!Array.isArray(results)) break;
+    if (!Array.isArray(results)) {
+      appendLog("push", "서버 응답 형식이 예상과 다름");
+      break;
+    }
 
-    // 실제로 서버가 받아들인 건만 전송 완료로 찍는다. skipped 는 다시 시도한다.
+    // 실제로 서버가 받아들인 건만 전송 완료로 찍는다. skipped 는 로컬에 남겨 재시도한다.
     chunk.forEach((p, idx) => {
       const outcome = results[idx]?.outcome;
       if (outcome && outcome !== "skipped") {
         state[p.key] = p.hash;
+        succeeded.push(p);
+      } else {
+        appendLog("push", `서버가 거부(skipped): ${p.payload.fileName} — ${results[idx]?.reason ?? "사유 없음"}`);
       }
     });
   }
 
   writeJson(STATE_PATH(), state);
+
+  // 정리: 전송 성공한 기록만 로컬에서 지운다. 서버 DB 가 진실의 원천이므로 로컬 사본은
+  // 전송용 임시일 뿐이다. 실패·거부분은 남겨 다음 요약 때 push 가 재시도한다.
+  const touchedDirs = new Set();
+  for (const p of succeeded) {
+    try {
+      fs.unlinkSync(p.mdPath);
+    } catch (err) {
+      appendLog("push", `정리 실패(.md): ${p.mdPath} — ${err}`);
+    }
+    if (p.metricsPath) {
+      try {
+        fs.unlinkSync(p.metricsPath);
+      } catch {
+        /* metrics 는 없을 수도 있다 — 조용히 넘어간다 */
+      }
+    }
+    touchedDirs.add(p.dir);
+  }
+  // 비게 된 projectSlug 디렉터리는 정리한다(rmdir 은 비어있을 때만 성공).
+  for (const d of touchedDirs) {
+    try {
+      fs.rmdirSync(d);
+    } catch {
+      /* 남은 파일이 있으면 그대로 둔다 */
+    }
+  }
 }
 
 main()
-  .catch(() => {
-    /* 절대 세션 종료를 막지 않는다 */
+  .catch((err) => {
+    try {
+      appendLog("push", `fatal: ${err}`);
+    } catch {
+      /* noop */
+    }
   })
   .finally(() => process.exit(0));

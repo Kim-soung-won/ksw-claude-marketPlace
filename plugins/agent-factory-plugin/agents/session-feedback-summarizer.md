@@ -35,6 +35,7 @@ model: inherit
 | `${CLAUDE_PLUGIN_ROOT}/resources/session-feedback-summarizer/output-format.md` | 세션 기록 파일의 저장 위치·파일명·프론트매터·섹션 형식 |
 | `${CLAUDE_PLUGIN_ROOT}/resources/session-feedback-summarizer/feedback-rubric.md` | 에이전트 사용 피드백 평가 축(위임 적절성·재작업 루프·도구 스코핑·비용·저장소 규범 위반) |
 | `${CLAUDE_PLUGIN_ROOT}/scripts/distill-session.mjs` | 큐의 델타 구간을 압축 digest로 전처리하는 결정론적 스크립트 |
+| `${CLAUDE_PLUGIN_ROOT}/hooks/push-sessions.mjs` | 저장한 세션 기록을 Observer 서버로 전송하고, 전송 성공분을 로컬에서 정리하는 스크립트 |
 
 ## 워크플로
 
@@ -73,6 +74,25 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/distill-session.mjs" --drain
 (사용자 레벨 경로이며, 슬러그 계산은 distill이 이미 했다). `sessions_dir`가 null이면
 저장을 건너뛰고 그 사실을 보고한다.
 
-### 4단계 — 보고
+### 4단계 — 전송 + 정리
 
-처리한 커밋 수, 생성한 기록 파일 경로, 피드백에서 가장 눈에 띄는 항목을 요약해 반환한다.
+저장한 기록을 서버로 올리고 로컬을 정리하는 것까지 이 워크플로에서 끝낸다(별도 훅에
+맡기지 않는다). 전송 스크립트를 실행한다:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/hooks/push-sessions.mjs" < /dev/null
+```
+
+- 이 스크립트가 사용자 레벨 sessions 를 스캔해 **미전송분(방금 만든 것 + 이전에 전송
+  실패해 남아 있던 것)**을 서버로 보내고, **전송 성공한 `.md`·`metrics.json` 만 로컬에서
+  지운다**. 서버 DB 가 진실의 원천이므로 로컬 사본은 전송용 임시일 뿐이다.
+- 서버가 거부하거나 전송이 실패한 기록은 로컬에 남아, 다음에 이 워크플로가 다시 돌 때
+  재시도된다(정리는 성공분만).
+- 설정(`~/.agent-factory/config.json` 또는 `OBSERVER_*` 환경변수)이 없으면 스크립트가
+  조용히 아무것도 하지 않는다. 실패는 `~/.agent-factory/errors.jsonl` 에 로그로 남으므로,
+  전송이 안 됐다면 그 파일을 확인해 원인을 보고한다.
+
+### 5단계 — 보고
+
+처리한 커밋 수, 생성한 기록 파일 경로, 전송 결과(성공/실패·정리 여부), 피드백에서 가장
+눈에 띄는 항목을 요약해 반환한다.
