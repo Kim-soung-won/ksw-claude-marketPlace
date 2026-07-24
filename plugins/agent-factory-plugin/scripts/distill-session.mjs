@@ -26,6 +26,7 @@
  *       단일 구간을 distill해 digest 하나를 출력한다(상태 변경 없음).
  */
 import fs from "node:fs";
+import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { PROCESSED_PATH, QUEUE_PATH } from "../lib/factory-home.mjs";
 
@@ -106,12 +107,42 @@ function addUsage(totals, usage) {
   totals.cache_creation += usage.cache_creation_input_tokens || 0;
 }
 
+/** attributionAgent 별 계량 누산기를 가져오거나 만든다(에이전트별 토큰·호출·에러). */
+function bumpAgent(map, key) {
+  let m = map.get(key);
+  if (!m) {
+    m = {
+      agent: key,
+      input: 0,
+      output: 0,
+      cache_read: 0,
+      cache_creation: 0,
+      tool_calls: 0,
+      errors: 0,
+    };
+    map.set(key, m);
+  }
+  return m;
+}
+
+/** attributionAgent 문자열("plugin:agent" 또는 "agent")에서 순수 에이전트 이름만. */
+function bareAgentName(key) {
+  const i = key.lastIndexOf(":");
+  return i === -1 ? key : key.slice(i + 1);
+}
+
 /** 델타 구간 라인들을 압축 digest로 전처리한다. */
 function distillWindow(entry) {
   const lines = readSlice(entry.jsonl_path, entry.from_offset, entry.to_offset);
   const timeline = [];
   const totals = { input: 0, output: 0, cache_read: 0, cache_creation: 0 };
   const agentsSeen = new Set();
+  // 에이전트별 결정론적 계량치(Sub-agents/Plugins 화면용). attributionAgent 태그된
+  // 이벤트만 귀속한다 — 메인 세션 토큰은 totals(cost_tokens)에 이미 있다.
+  const agentMetrics = new Map();
+  // subagent_type 별 실제 spawn 횟수(Agent tool_use 카운트). frontmatter 의 unique
+  // 집합보다 정확하다.
+  const spawnCounts = new Map();
   // 감정 신호: 부정=assistant 출력, 긍정=user 입력
   const signals = { negative_output: [], positive_input: [] };
   let events = 0;
@@ -131,6 +162,8 @@ function distillWindow(entry) {
     const msg = ev.message;
     if (ev.type === "assistant" && msg) {
       addUsage(totals, msg.usage);
+      // 서브에이전트가 낸 토큰은 그 에이전트에 귀속한다.
+      if (ev.attributionAgent) addUsage(bumpAgent(agentMetrics, ev.attributionAgent), msg.usage);
       for (const item of msg.content || []) {
         if (item.type === "text" && item.text && item.text.trim()) {
           const entryOut = { role: "assistant", text: truncate(item.text, TEXT_LIMIT) };
@@ -145,7 +178,15 @@ function distillWindow(entry) {
           const t = { tool: item.name };
           const s = compactToolInput(item.name, item.input);
           if (s !== undefined) t.arg = s;
-          if (ev.attributionAgent) t.by = ev.attributionAgent;
+          if (ev.attributionAgent) {
+            t.by = ev.attributionAgent;
+            bumpAgent(agentMetrics, ev.attributionAgent).tool_calls += 1;
+          }
+          // Agent 도구 호출 = 서브에이전트 spawn. subagent_type 별로 센다.
+          if (item.name === "Agent" && item.input && item.input.subagent_type) {
+            const st = item.input.subagent_type;
+            spawnCounts.set(st, (spawnCounts.get(st) || 0) + 1);
+          }
           timeline.push(t);
         }
         // thinking(signature 포함)은 통째로 버린다.
@@ -166,6 +207,7 @@ function distillWindow(entry) {
       } else if (Array.isArray(c)) {
         for (const item of c) {
           if (item.type === "tool_result" && item.is_error) {
+            if (ev.attributionAgent) bumpAgent(agentMetrics, ev.attributionAgent).errors += 1;
             const body =
               typeof item.content === "string"
                 ? item.content
@@ -184,6 +226,12 @@ function distillWindow(entry) {
     }
   }
 
+  // 에이전트별 계량치에 spawn 수를 합쳐 확정한다(순수 이름으로 매칭).
+  const agentCosts = [...agentMetrics.values()].map((m) => ({
+    ...m,
+    spawns: spawnCounts.get(bareAgentName(m.agent)) || 0,
+  }));
+
   return {
     session_id: entry.session_id,
     commit: entry.commit,
@@ -193,9 +241,34 @@ function distillWindow(entry) {
     event_count: events,
     agents: [...agentsSeen],
     cost_tokens: totals,
+    // 기계 정밀 계량치 — .md(사람 요약)와 분리해 metrics.json 사이드카로 전송한다.
+    agent_costs: agentCosts,
     signals,
     timeline,
   };
+}
+
+/**
+ * 에이전트별 결정론적 계량치를 `<gitRoot>/.agent-factory/sessions/<sha7>.metrics.json`
+ * 사이드카로 쓴다.
+ *
+ * 이 값은 LLM(summarizer)을 거치지 않고 서버로 직접 간다 — 토큰·비용은 정확해야
+ * 의미가 있어서, 사람이 읽는 요약 `.md` 와 기계 정밀 계량치를 파일로 분리한다.
+ * 파일명은 `.md` 와 같은 sha7 prefix 라, push 훅이 `.md` 로부터 짝을 찾을 수 있다.
+ */
+function writeMetricsSidecar(entry, digest) {
+  if (!entry.git_root || !entry.commit) return;
+  const sha7 = entry.commit.slice(0, 7);
+  const dir = path.join(entry.git_root, ".agent-factory", "sessions");
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, `${sha7}.metrics.json`),
+      JSON.stringify({ commit: entry.commit, agent_costs: digest.agent_costs }, null, 2),
+    );
+  } catch {
+    /* 사이드카 실패는 흐름을 막지 않는다 — .md 요약은 그대로 나간다 */
+  }
 }
 
 /**
@@ -228,7 +301,9 @@ function drain(gitRoot) {
       continue;
     }
     try {
-      digests.push(distillWindow(entry));
+      const digest = distillWindow(entry);
+      digests.push(digest);
+      writeMetricsSidecar(entry, digest);
       processed.push({ ...entry, processed: true, distilled_at: new Date().toISOString() });
     } catch {
       keep.push(line); // distill 실패 → 큐에 남겨 재시도
