@@ -68,8 +68,10 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/distill-session.mjs" --drain
 
 ### 3단계 — 저장
 
-`output-format.md`가 정한 위치·형식으로 커밋별 세션 기록 파일을 Write한다(기본
-`.agent-factory/sessions/`).
+`output-format.md`가 정한 위치·형식으로 커밋별 세션 기록 파일을 Write한다. 저장 위치는
+문자열로 외우지 말고 **digest가 알려주는 `sessions_dir`**를 그대로 Write 디렉터리로 쓴다
+(사용자 레벨 경로이며, 슬러그 계산은 distill이 이미 했다). `sessions_dir`가 null이면
+저장을 건너뛰고 그 사실을 보고한다.
 
 ### 4단계 — 보고
 

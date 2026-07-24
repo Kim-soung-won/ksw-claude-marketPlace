@@ -28,12 +28,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { PROCESSED_PATH, QUEUE_PATH } from "../lib/factory-home.mjs";
+import { PROCESSED_PATH, QUEUE_PATH, projectSessionsDir } from "../lib/factory-home.mjs";
 
 const TEXT_LIMIT = 600;
 const CMD_LIMIT = 200;
 const ERR_LIMIT = 300;
 const STDOUT_HEAD = 120;
+// 델타당 timeline 항목 수 상한 — 델타 크기와 무관하게 digest 를 유계로 만든다.
+// 큰 델타(예: 세션 전체가 한 커밋에 잡힌 경우)에서 timeline 이 무한정 길어져 digest 가
+// 부풀고 summarizer 토큰이 과소모되던 문제를 막는다. 실측 튜닝 가능한 상수.
+const TIMELINE_LIMIT = 400;
 
 // 감정 신호 어휘 사전(확장 가능). 결정론적 감지라 LLM이 놓치지 않는다.
 // 부정 신호는 assistant "출력"에서, 긍정 신호는 user "입력"에서만 찾는다.
@@ -105,6 +109,94 @@ function addUsage(totals, usage) {
   totals.output += usage.output_tokens || 0;
   totals.cache_read += usage.cache_read_input_tokens || 0;
   totals.cache_creation += usage.cache_creation_input_tokens || 0;
+}
+
+/**
+ * timeline 을 결정론적으로 유계화한다(LLM 없이 배열 순회만). 반환 `{ timeline, meta }`.
+ *
+ * 신호 보존 우선순위:
+ *   P0 = 절대 보존 — user/assistant 텍스트(감정 flag 포함)·에러 항목
+ *   P1 = 압축/축소 대상 — tool_use (반복은 접고, 넘치면 버린다)
+ *   P2 = 최우선 폐기 — 성공 stdout 길이 항목
+ *
+ * 패스 A) 연속 실행 접기: 인접 tool_use 가 tool·by 모두 같으면 하나로 접어 repeat:n 을
+ *         단다(text/error/stdout 이 사이에 오면 run 이 끊긴다). 'Read/Edit 버스트'를
+ *         O(1) 로 보존하고 에이전트 경계(by)를 유지한다.
+ * 패스 B) 여전히 초과면 P2(stdout)를 등장 순서로 폐기.
+ * 패스 C) 그래도 초과면 P0 를 전부 보존한 채 남은 P1 을 budget(limit - P0수)까지만 채운다.
+ *         P0 만으로 limit 를 넘으면 P0 는 전부 남긴다(soft cap — 핵심 신호는 손실 금지).
+ */
+function boundTimeline(timeline) {
+  const total = timeline.length;
+  const meta = {
+    limit: TIMELINE_LIMIT,
+    total_original: total,
+    collapsed_runs: 0,
+    collapsed_items: 0,
+    dropped_stdout: 0,
+    dropped_tools: 0,
+  };
+
+  const isP0 = (it) => it.role === "user" || it.role === "assistant" || it.error === true;
+  const isStdout = (it) => typeof it.result_len === "number";
+  const isTool = (it) => typeof it.tool === "string";
+
+  // 패스 A — 인접 동일 tool_use 접기
+  const collapsed = [];
+  for (const it of timeline) {
+    const prev = collapsed[collapsed.length - 1];
+    if (
+      isTool(it) &&
+      prev &&
+      isTool(prev) &&
+      prev.tool === it.tool &&
+      prev.by === it.by
+    ) {
+      prev.repeat = (prev.repeat || 1) + 1;
+      meta.collapsed_items += 1;
+      if (prev.repeat === 2) meta.collapsed_runs += 1;
+      continue;
+    }
+    collapsed.push(isTool(it) ? { ...it } : it);
+  }
+
+  if (collapsed.length <= TIMELINE_LIMIT) {
+    return { timeline: collapsed, meta };
+  }
+
+  // 패스 B — 성공 stdout 항목 폐기
+  let afterB = collapsed;
+  const stdoutCount = collapsed.filter(isStdout).length;
+  if (stdoutCount > 0) {
+    afterB = collapsed.filter((it) => {
+      if (isStdout(it)) {
+        meta.dropped_stdout += 1;
+        return false;
+      }
+      return true;
+    });
+  }
+
+  if (afterB.length <= TIMELINE_LIMIT) {
+    return { timeline: afterB, meta };
+  }
+
+  // 패스 C — P0 전량 보존 + P1 을 budget 까지만
+  const p0 = afterB.filter(isP0);
+  const budget = Math.max(TIMELINE_LIMIT - p0.length, 0);
+  const result = [];
+  let kept = 0;
+  for (const it of afterB) {
+    if (isP0(it)) {
+      result.push(it);
+    } else if (kept < budget) {
+      result.push(it);
+      kept += 1;
+    } else {
+      meta.dropped_tools += 1;
+    }
+  }
+  return { timeline: result, meta };
 }
 
 /** attributionAgent 별 계량 누산기를 가져오거나 만든다(에이전트별 토큰·호출·에러). */
@@ -232,11 +324,25 @@ function distillWindow(entry) {
     spawns: spawnCounts.get(bareAgentName(m.agent)) || 0,
   }));
 
+  // timeline 을 유계화한다. cost_tokens·agent_costs·agents·signals·event_count 은
+  // 이미 유계인 집계·계량치라 상한과 무관하게 완전하게 둔다.
+  const { timeline: boundedTimeline, meta: timelineMeta } = boundTimeline(timeline);
+
+  // 세션 기록·계량치는 레포가 아니라 사용자 레벨에 저장한다. 슬러그 계산(해시)은
+  // 결정론적 스크립트가 하고, summarizer(LLM)는 digest.sessions_dir 를 그대로 Write
+  // 대상으로 쓰면 되므로 해시 계산을 LLM 에 맡기지 않는다.
+  const projectPath = entry.git_root ?? null;
+
   return {
     session_id: entry.session_id,
     commit: entry.commit,
     commit_message: entry.commit_message || null,
     cwd: entry.cwd,
+    // 파일이 레포 밖에 저장되므로 어느 프로젝트 기록인지 digest 가 스스로 밝힌다.
+    project_path: projectPath,
+    project_name: projectPath ? path.basename(projectPath) : null,
+    // summarizer 가 .md 를 쓸 디렉터리. 단일 구간 디버그 모드(git_root 없음)면 null.
+    sessions_dir: projectPath ? projectSessionsDir(projectPath) : null,
     captured_at: entry.captured_at,
     event_count: events,
     agents: [...agentsSeen],
@@ -244,27 +350,42 @@ function distillWindow(entry) {
     // 기계 정밀 계량치 — .md(사람 요약)와 분리해 metrics.json 사이드카로 전송한다.
     agent_costs: agentCosts,
     signals,
-    timeline,
+    timeline: boundedTimeline,
+    // timeline 이 상한으로 압축·절단됐는지 알린다(절단분은 요약 근거로 삼지 않게).
+    timeline_meta: timelineMeta,
   };
 }
 
 /**
- * 에이전트별 결정론적 계량치를 `<gitRoot>/.agent-factory/sessions/<sha7>.metrics.json`
- * 사이드카로 쓴다.
+ * 에이전트별 결정론적 계량치를 사용자 레벨
+ * `~/.agent-factory/sessions/<projectSlug>/<sha7>.metrics.json` 사이드카로 쓴다.
  *
  * 이 값은 LLM(summarizer)을 거치지 않고 서버로 직접 간다 — 토큰·비용은 정확해야
  * 의미가 있어서, 사람이 읽는 요약 `.md` 와 기계 정밀 계량치를 파일로 분리한다.
  * 파일명은 `.md` 와 같은 sha7 prefix 라, push 훅이 `.md` 로부터 짝을 찾을 수 있다.
+ *
+ * 파일이 레포 밖(사용자 레벨)에 있으므로, 어느 프로젝트 기록인지 내용에 담는다
+ * (`project_path`/`project_name`). push 는 파일 위치가 아니라 이 값으로 프로젝트를
+ * 복원해 서버에 보낸다.
  */
 function writeMetricsSidecar(entry, digest) {
   if (!entry.git_root || !entry.commit) return;
   const sha7 = entry.commit.slice(0, 7);
-  const dir = path.join(entry.git_root, ".agent-factory", "sessions");
+  const dir = projectSessionsDir(entry.git_root);
   try {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(
       path.join(dir, `${sha7}.metrics.json`),
-      JSON.stringify({ commit: entry.commit, agent_costs: digest.agent_costs }, null, 2),
+      JSON.stringify(
+        {
+          commit: entry.commit,
+          project_path: entry.git_root,
+          project_name: path.basename(entry.git_root),
+          agent_costs: digest.agent_costs,
+        },
+        null,
+        2,
+      ),
     );
   } catch {
     /* 사이드카 실패는 흐름을 막지 않는다 — .md 요약은 그대로 나간다 */
