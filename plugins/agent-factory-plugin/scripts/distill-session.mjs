@@ -229,8 +229,36 @@ function bareAgentName(key) {
 }
 
 /** 델타 구간 라인들을 압축 digest로 전처리한다. */
+/**
+ * 여러 큐 항목(같은 커밋의 델타 구간들)의 라인을 offset 순서로 이어붙인다.
+ * 슬라이스 경계는 커밋 시점 파일 끝(=라인 경계)이라 concat 이 JSONL 라인을 쪼개지 않는다.
+ */
+function collectLines(entries) {
+  const sorted = [...entries].sort((a, b) => (a.from_offset || 0) - (b.from_offset || 0));
+  const lines = [];
+  for (const e of sorted) {
+    for (const line of readSlice(e.jsonl_path, e.from_offset, e.to_offset)) {
+      lines.push(line);
+    }
+  }
+  return lines;
+}
+
+/** 단일 구간 → digest (하위호환 래퍼). CLI 단일 구간 모드가 이 시그니처를 쓴다. */
 function distillWindow(entry) {
-  const lines = readSlice(entry.jsonl_path, entry.from_offset, entry.to_offset);
+  return distillLines(collectLines([entry]), entry);
+}
+
+/** 같은 커밋의 여러 구간을 하나의 digest 로 병합한다. meta 는 그 커밋의 신원 정보. */
+function distillCommit(entries, meta) {
+  return distillLines(collectLines(entries), meta);
+}
+
+/**
+ * 이어붙인 라인 배열을 압축 digest 로 전처리한다. meta 는 커밋 신원
+ * ({ session_id, commit, commit_message, cwd, git_root, captured_at }).
+ */
+function distillLines(lines, meta) {
   const timeline = [];
   const totals = { input: 0, output: 0, cache_read: 0, cache_creation: 0 };
   const agentsSeen = new Set();
@@ -336,19 +364,19 @@ function distillWindow(entry) {
   // 세션 기록·계량치는 레포가 아니라 사용자 레벨에 저장한다. 슬러그 계산(해시)은
   // 결정론적 스크립트가 하고, summarizer(LLM)는 digest.sessions_dir 를 그대로 Write
   // 대상으로 쓰면 되므로 해시 계산을 LLM 에 맡기지 않는다.
-  const projectPath = entry.git_root ?? null;
+  const projectPath = meta.git_root ?? null;
 
   return {
-    session_id: entry.session_id,
-    commit: entry.commit,
-    commit_message: entry.commit_message || null,
-    cwd: entry.cwd,
+    session_id: meta.session_id,
+    commit: meta.commit,
+    commit_message: meta.commit_message || null,
+    cwd: meta.cwd,
     // 파일이 레포 밖에 저장되므로 어느 프로젝트 기록인지 digest 가 스스로 밝힌다.
     project_path: projectPath,
     project_name: projectPath ? path.basename(projectPath) : null,
     // summarizer 가 .md 를 쓸 디렉터리. 단일 구간 디버그 모드(git_root 없음)면 null.
     sessions_dir: projectPath ? projectSessionsDir(projectPath) : null,
-    captured_at: entry.captured_at,
+    captured_at: meta.captured_at,
     event_count: events,
     agents: [...agentsSeen],
     cost_tokens: totals,
@@ -398,21 +426,49 @@ function writeMetricsSidecar(entry, digest) {
   }
 }
 
+// distinct sha 의 liveness 를 캐시한다(같은 drain 안 반복 git 호출 회피).
+const commitLivenessCache = new Map();
+
 /**
- * 큐에서 `gitRoot` 레포의 항목만 골라 distill 하고, 큐에서 제거한다.
+ * sha 가 현재 git 히스토리에 살아있는 커밋인지 본다. amend/reset 로 HEAD 가 바뀌면
+ * 큐에 '고아 sha'(이제 존재하지 않는 커밋)가 남을 수 있어, 이를 판별해 별도 기록으로
+ * 서버에 보내지 않기 위한 것이다.
+ */
+function commitExists(gitRoot, sha) {
+  if (!sha) return false;
+  const key = `${gitRoot} ${sha}`;
+  if (commitLivenessCache.has(key)) return commitLivenessCache.get(key);
+  let live = false;
+  try {
+    execFileSync("git", ["-C", gitRoot, "rev-parse", "--verify", "--quiet", `${sha}^{commit}`], {
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+    live = true;
+  } catch {
+    live = false;
+  }
+  commitLivenessCache.set(key, live);
+  return live;
+}
+
+/**
+ * 큐에서 `gitRoot` 레포 항목을 골라 **커밋 단위로 병합**해 distill 하고, 큐에서 제거한다.
  *
- * 큐는 사용자 레벨(`~/.agent-factory/queue.jsonl`)에 모든 레포의 델타가 섞여 쌓인다.
- * 요약 결과 `.md` 는 해당 레포에 써야 하므로, 여기서 **다른 레포 항목은 손대지 않고
- * 큐에 그대로 남긴다.** 실패분도 남겨 다음 기회에 재시도한다.
+ * 한 세션에서 git commit 을 여러 번(커밋·amend·reset 후 재커밋) 실행하면 capture 가 같은
+ * sha 에 여러 델타 구간을 큐에 쌓는다. 여기서 같은 커밋의 구간들을 하나의 digest 로 합쳐
+ * **커밋당 기록 1개**를 만든다. amend/reset 로 사라진 고아 커밋의 델타는 offset 상 바로
+ * 뒤따르는 실 커밋에 접어 넣는다(fold-forward) — 뒤 커밋이 아직 없으면 큐에 남겨 다음
+ * drain 으로 미룬다(작업 유실·존재하지 않는 커밋 전송 둘 다 방지).
+ *
+ * 다른 레포 항목·파싱 실패 라인·distill 실패 그룹은 큐에 남겨 다음 기회에 재시도한다.
  */
 function drain(gitRoot) {
   const queuePath = QUEUE_PATH();
   if (!fs.existsSync(queuePath)) return [];
 
   const lines = fs.readFileSync(queuePath, "utf8").split("\n").filter((l) => l.trim());
-  const digests = [];
-  const processed = [];
   const keep = [];
+  const mine = []; // 이 레포 항목: { entry, line }
 
   for (const line of lines) {
     let entry;
@@ -421,20 +477,74 @@ function drain(gitRoot) {
     } catch {
       continue; // 깨진 줄은 버린다
     }
-    // git_root 가 없는 항목은 구버전 훅이 남긴 것이라 대상 판별이 안 된다 → 이 레포 것으로 본다.
+    // git_root 가 없는 항목은 구버전 훅이 남긴 것이라 판별 불가 → 이 레포 것으로 본다.
     const owner = entry.git_root ?? gitRoot;
     if (owner !== gitRoot) {
       keep.push(line);
       continue;
     }
+    mine.push({ entry, line });
+  }
+
+  // offset 오름차순(안정 정렬). 같은 sha 델타는 워터마크상 연속 구간이라 순서가 확정된다.
+  mine.sort((a, b) => (a.entry.from_offset || 0) - (b.entry.from_offset || 0));
+
+  // 커밋 단위 그룹 + fold-forward.
+  const groups = []; // { commit, own: [item], folded: [item] }
+  const byCommit = new Map();
+  let pendingOrphans = [];
+
+  for (const item of mine) {
+    const sha = item.entry.commit;
+    if (sha && commitExists(gitRoot, sha)) {
+      let g = byCommit.get(sha);
+      if (!g) {
+        g = { commit: sha, own: [], folded: [] };
+        byCommit.set(sha, g);
+        groups.push(g);
+      }
+      g.own.push(item);
+      // 앞서 쌓인 고아(사라진 커밋의 델타)를 이 실 커밋에 접어 넣는다.
+      if (pendingOrphans.length > 0) {
+        g.folded.push(...pendingOrphans);
+        pendingOrphans = [];
+      }
+    } else if (!sha) {
+      // commit 비어있음(HEAD 조회 실패 등 엣지) — 병합하지 않고 개별 싱글턴으로 둔다.
+      groups.push({ commit: null, own: [item], folded: [] });
+    } else {
+      // non-empty 이나 not-live → 고아. 뒤따르는 실 커밋에 접힐 때까지 대기.
+      pendingOrphans.push(item);
+    }
+  }
+  // 뒤따르는 실 커밋이 이번 drain 에 없는 말미 고아 → 큐에 남겨 다음 drain 으로 미룬다.
+  for (const o of pendingOrphans) keep.push(o.line);
+
+  const digests = [];
+  const processed = [];
+
+  for (const g of groups) {
+    const all = [...g.own, ...g.folded].sort(
+      (a, b) => (a.entry.from_offset || 0) - (b.entry.from_offset || 0),
+    );
+    // meta 는 이 커밋의 '자기' 항목 중 captured_at 최신 것(amend 후 최신 메시지 반영).
+    // 자기 항목이 없으면(commit=null 싱글턴 등) 첫 항목을 쓴다.
+    const ownLatest = g.own.reduce(
+      (latest, it) =>
+        !latest || (it.entry.captured_at || "") > (latest.entry.captured_at || "") ? it : latest,
+      null,
+    );
+    const meta = (ownLatest ?? all[0]).entry;
     try {
-      const digest = distillWindow(entry);
+      const digest = distillCommit(all.map((x) => x.entry), meta);
       digests.push(digest);
-      writeMetricsSidecar(entry, digest);
-      processed.push({ ...entry, processed: true, distilled_at: new Date().toISOString() });
+      writeMetricsSidecar(meta, digest);
+      for (const x of all) {
+        processed.push({ ...x.entry, processed: true, distilled_at: new Date().toISOString() });
+      }
     } catch (err) {
-      keep.push(line); // distill 실패 → 큐에 남겨 재시도
-      appendLog("distill", `distill 실패 (${entry.commit?.slice(0, 7) ?? "?"}): ${err}`);
+      for (const x of all) keep.push(x.line); // 그룹 단위 롤백 → 큐에 남겨 재시도
+      appendLog("distill", `distill 실패 (${meta.commit?.slice(0, 7) ?? "?"}): ${err}`);
     }
   }
 
