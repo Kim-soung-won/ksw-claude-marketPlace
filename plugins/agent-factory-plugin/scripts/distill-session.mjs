@@ -222,12 +222,6 @@ function bumpAgent(map, key) {
   return m;
 }
 
-/** attributionAgent 문자열("plugin:agent" 또는 "agent")에서 순수 에이전트 이름만. */
-function bareAgentName(key) {
-  const i = key.lastIndexOf(":");
-  return i === -1 ? key : key.slice(i + 1);
-}
-
 /** 델타 구간 라인들을 압축 digest로 전처리한다. */
 /**
  * 여러 큐 항목(같은 커밋의 델타 구간들)의 라인을 offset 순서로 이어붙인다.
@@ -263,10 +257,14 @@ function distillLines(lines, meta) {
   const totals = { input: 0, output: 0, cache_read: 0, cache_creation: 0 };
   const agentsSeen = new Set();
   // 에이전트별 결정론적 계량치(Sub-agents/Plugins 화면용). attributionAgent 태그된
-  // 이벤트만 귀속한다 — 메인 세션 토큰은 totals(cost_tokens)에 이미 있다.
+  // 이벤트에서만 토큰·tool_calls·errors 를 귀속한다 — 메인 세션 토큰은
+  // totals(cost_tokens)에 이미 있다. 다만 현재 Claude Code 세션 JSONL 은 sub-agent
+  // 이벤트에 attributionAgent 를 남기지 않는 경우가 있어(메인 트랜스크립트에는 Agent
+  // tool_use 만 보인다), 이 맵만으로는 sub-agent 가 통째로 누락된다 — 그래서 아래
+  // spawnCounts 가 sub-agent 존재의 1급 신호다.
   const agentMetrics = new Map();
-  // subagent_type 별 실제 spawn 횟수(Agent tool_use 카운트). frontmatter 의 unique
-  // 집합보다 정확하다.
+  // subagent_type 별 실제 spawn 횟수(Agent tool_use 카운트). attributionAgent 유무와
+  // 무관하게 항상 잡히므로, agent_costs·agents 는 이 카운트를 기준으로 채운다.
   const spawnCounts = new Map();
   // 감정 신호: 부정=assistant 출력, 긍정=user 입력
   const signals = { negative_output: [], positive_input: [] };
@@ -351,11 +349,41 @@ function distillLines(lines, meta) {
     }
   }
 
-  // 에이전트별 계량치에 spawn 수를 합쳐 확정한다(순수 이름으로 매칭).
-  const agentCosts = [...agentMetrics.values()].map((m) => ({
-    ...m,
-    spawns: spawnCounts.get(bareAgentName(m.agent)) || 0,
-  }));
+  // 에이전트별 계량치와 spawn 수를 하나로 병합해 확정한다. 키는 전체 "plugin:agent"
+  // 문자열 — attributionAgent 와 subagent_type 이 같은 형식이라(bareAgentName 없이도)
+  // 자연히 합쳐진다. spawnCounts 를 시드로 삼으므로, 계량치(attributionAgent)가 전혀
+  // 없어도 spawn 된 에이전트는 반드시 항목이 생긴다(토큰류는 0, spawns 만 채워짐).
+  const costsByAgent = new Map();
+  const ensureCost = (name) => {
+    let m = costsByAgent.get(name);
+    if (!m) {
+      m = {
+        agent: name,
+        input: 0,
+        output: 0,
+        cache_read: 0,
+        cache_creation: 0,
+        tool_calls: 0,
+        errors: 0,
+        spawns: 0,
+      };
+      costsByAgent.set(name, m);
+    }
+    return m;
+  };
+  for (const m of agentMetrics.values()) {
+    const t = ensureCost(m.agent);
+    t.input += m.input;
+    t.output += m.output;
+    t.cache_read += m.cache_read;
+    t.cache_creation += m.cache_creation;
+    t.tool_calls += m.tool_calls;
+    t.errors += m.errors;
+  }
+  for (const [type, count] of spawnCounts) {
+    ensureCost(type).spawns += count;
+  }
+  const agentCosts = [...costsByAgent.values()];
 
   // timeline 을 유계화한다. cost_tokens·agent_costs·agents·signals·event_count 은
   // 이미 유계인 집계·계량치라 상한과 무관하게 완전하게 둔다.
@@ -378,7 +406,9 @@ function distillLines(lines, meta) {
     sessions_dir: projectPath ? projectSessionsDir(projectPath) : null,
     captured_at: meta.captured_at,
     event_count: events,
-    agents: [...agentsSeen],
+    // attributionAgent 로 관측된 에이전트 ∪ 실제 spawn 된 subagent_type. 후자를 합치므로
+    // attributionAgent 가 비어도 어떤 sub-agent 를 썼는지가 항상 채워진다.
+    agents: [...new Set([...agentsSeen, ...spawnCounts.keys()])],
     cost_tokens: totals,
     // 기계 정밀 계량치 — .md(사람 요약)와 분리해 metrics.json 사이드카로 전송한다.
     agent_costs: agentCosts,
