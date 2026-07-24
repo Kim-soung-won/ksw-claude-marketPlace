@@ -4,23 +4,34 @@
  *
  * 무조건 실행되는 hook이므로 규칙은 단 하나다: **가볍고, 절대 커밋을 막지 않는다.**
  * LLM을 부르지 않고, 세션 JSONL도 통째로 읽지 않는다. 하는 일은:
- *   1. stdin hook JSON에서 session_id·cwd를 읽는다.
+ *   1. stdin hook JSON에서 session_id·cwd·transcript_path를 읽는다.
  *   2. 방금 성사된 커밋 sha와 커밋된 레포의 git root를 구한다.
  *   3. 세션 JSONL의 "현재 끝"(byte offset + 마지막 event uuid)을 워터마크로 읽는다.
- *   4. 직전 커밋 워터마크(.agent-factory/cursors.json)와의 **델타 구간**을 큐에 적재한다.
+ *   4. 직전 커밋 워터마크와의 **델타 구간**을 큐에 적재한다.
  *   5. 워터마크를 현재 끝으로 갱신한다.
  * 어떤 단계가 실패해도 조용히 넘어가고 항상 exit 0 한다.
  *
  * 델타 구간 단위가 핵심이다: 한 세션에서 프롬프트·커밋을 계속 이어가도, 각 커밋은
  * "직전 커밋 이후 ~ 이번 커밋"만 담아 커밋 간 중복 오염이 없다.
  *
+ * **이 훅은 작업 레포에 아무것도 쓰지 않는다.** 워터마크·큐는 사용자 레벨
+ * (`~/.agent-factory/`)에 둔다 — 근거는 lib/factory-home.mjs 참조.
+ *
  * JSONL 구조(uuid·마지막 event 등)의 근거는 claude-code-docs-plugin의
- * claude-code-jsonl 스킬이다.
+ * claude-code-jsonl 스킬이고, hook 입력 필드(`transcript_path` 등)의 근거는
+ * 같은 플러그인의 claude-code-hooks 스킬이다.
  */
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
+import {
+  CURSORS_PATH,
+  QUEUE_PATH,
+  ensureHome,
+  readJson,
+  writeJson,
+} from "../lib/factory-home.mjs";
 
 function safeGit(cwd, args) {
   try {
@@ -33,15 +44,20 @@ function safeGit(cwd, args) {
   }
 }
 
-function readJson(file) {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return null;
-  }
+/**
+ * 세션 JSONL 경로를 구한다.
+ *
+ * 훅 입력의 `transcript_path` 가 정답이다(모든 훅에 제공되는 공통 필드). 예전
+ * 버전이나 예외 상황에 대비해서만 이름 탐색으로 물러선다 — 이 폴백은 프로젝트
+ * 디렉터리 전체를 훑으므로 세션이 쌓이면 비싸다.
+ */
+function resolveTranscript(transcriptPath, sessionId) {
+  if (transcriptPath && fs.existsSync(transcriptPath)) return transcriptPath;
+  if (!sessionId) return null;
+  return findSessionJsonl(path.join(os.homedir(), ".claude", "projects"), `${sessionId}.jsonl`);
 }
 
-/** projects 디렉토리에서 `${sessionId}.jsonl`을 이름으로 찾는다(경로 인코딩이 손실적이므로 이름 탐색이 견고). */
+/** 폴백 전용: `${sessionId}.jsonl`을 이름으로 찾는다(경로 인코딩이 손실적이라 이름 탐색이 견고). */
 function findSessionJsonl(root, fileName) {
   let stack = [root];
   while (stack.length > 0) {
@@ -91,8 +107,7 @@ function main() {
   const cwd = input.cwd || process.cwd();
   if (!sessionId) return;
 
-  const projectsDir = path.join(os.homedir(), ".claude", "projects");
-  const jsonlPath = findSessionJsonl(projectsDir, `${sessionId}.jsonl`);
+  const jsonlPath = resolveTranscript(input.transcript_path, sessionId);
   if (!jsonlPath) return;
 
   const gitRoot = safeGit(cwd, ["rev-parse", "--show-toplevel"]);
@@ -102,19 +117,9 @@ function main() {
     ? safeGit(cwd, ["log", "-1", "--pretty=%B", commit]) || ""
     : "";
 
-  const factoryDir = path.join(gitRoot, ".agent-factory");
-  fs.mkdirSync(factoryDir, { recursive: true });
+  if (!ensureHome()) return;
 
-  // 최초 생성 시 전이 상태(큐·커서)는 버전관리 대상이 아님을 표시한다.
-  const gitignorePath = path.join(factoryDir, ".gitignore");
-  if (!fs.existsSync(gitignorePath)) {
-    fs.writeFileSync(gitignorePath, "queue.jsonl\nprocessed.jsonl\ncursors.json\n");
-  }
-
-  const cursorsPath = path.join(factoryDir, "cursors.json");
-  const queuePath = path.join(factoryDir, "queue.jsonl");
-
-  const cursors = readJson(cursorsPath) || {};
+  const cursors = readJson(CURSORS_PATH(), {}) || {};
   const prev = cursors[sessionId] || { offset: 0, uuid: null };
 
   const stat = fs.statSync(jsonlPath);
@@ -136,13 +141,15 @@ function main() {
     to_offset: toOffset,
     to_uuid: toUuid,
     cwd,
+    // 큐가 사용자 레벨로 모이므로 어느 레포의 델타인지 항목이 스스로 밝혀야 한다.
+    git_root: gitRoot,
     captured_at: capturedAt,
     processed: false,
   };
-  fs.appendFileSync(queuePath, JSON.stringify(entry) + "\n");
+  fs.appendFileSync(QUEUE_PATH(), JSON.stringify(entry) + "\n");
 
   cursors[sessionId] = { offset: toOffset, uuid: toUuid, updated_at: capturedAt };
-  fs.writeFileSync(cursorsPath, JSON.stringify(cursors, null, 2));
+  writeJson(CURSORS_PATH(), cursors);
 }
 
 try {

@@ -20,13 +20,14 @@
  *
  * 사용:
  *   node distill-session.mjs --drain [--dir <gitRoot>]
- *       .agent-factory/queue.jsonl의 미처리 항목을 전부 distill해 JSON 배열로 출력하고,
- *       처리한 항목을 processed.jsonl로 옮긴 뒤 큐를 비운다.
+ *       ~/.agent-factory/queue.jsonl 중 **해당 레포(gitRoot)** 항목만 distill해 JSON
+ *       배열로 출력하고, 처리분을 processed.jsonl로 옮긴다. 다른 레포 항목은 큐에 남는다.
  *   node distill-session.mjs <jsonlPath> --from-offset N --to-offset M
  *       단일 구간을 distill해 digest 하나를 출력한다(상태 변경 없음).
  */
 import fs from "node:fs";
-import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { PROCESSED_PATH, QUEUE_PATH } from "../lib/factory-home.mjs";
 
 const TEXT_LIMIT = 600;
 const CMD_LIMIT = 200;
@@ -197,51 +198,74 @@ function distillWindow(entry) {
   };
 }
 
+/**
+ * 큐에서 `gitRoot` 레포의 항목만 골라 distill 하고, 큐에서 제거한다.
+ *
+ * 큐는 사용자 레벨(`~/.agent-factory/queue.jsonl`)에 모든 레포의 델타가 섞여 쌓인다.
+ * 요약 결과 `.md` 는 해당 레포에 써야 하므로, 여기서 **다른 레포 항목은 손대지 않고
+ * 큐에 그대로 남긴다.** 실패분도 남겨 다음 기회에 재시도한다.
+ */
 function drain(gitRoot) {
-  const factoryDir = path.join(gitRoot, ".agent-factory");
-  const queuePath = path.join(factoryDir, "queue.jsonl");
+  const queuePath = QUEUE_PATH();
   if (!fs.existsSync(queuePath)) return [];
 
   const lines = fs.readFileSync(queuePath, "utf8").split("\n").filter((l) => l.trim());
   const digests = [];
   const processed = [];
+  const keep = [];
+
   for (const line of lines) {
     let entry;
     try {
       entry = JSON.parse(line);
     } catch {
+      continue; // 깨진 줄은 버린다
+    }
+    // git_root 가 없는 항목은 구버전 훅이 남긴 것이라 대상 판별이 안 된다 → 이 레포 것으로 본다.
+    const owner = entry.git_root ?? gitRoot;
+    if (owner !== gitRoot) {
+      keep.push(line);
       continue;
     }
     try {
       digests.push(distillWindow(entry));
       processed.push({ ...entry, processed: true, distilled_at: new Date().toISOString() });
     } catch {
-      // distill 실패한 항목은 큐에 남겨 다음 기회에 재시도.
-      fs.appendFileSync(path.join(factoryDir, "queue.retry.jsonl"), line + "\n");
+      keep.push(line); // distill 실패 → 큐에 남겨 재시도
     }
   }
+
   if (processed.length > 0) {
     fs.appendFileSync(
-      path.join(factoryDir, "processed.jsonl"),
+      PROCESSED_PATH(),
       processed.map((p) => JSON.stringify(p)).join("\n") + "\n",
     );
   }
-  // 큐를 비우고, 실패분이 있으면 되돌린다.
-  const retryPath = path.join(factoryDir, "queue.retry.jsonl");
-  if (fs.existsSync(retryPath)) {
-    fs.renameSync(retryPath, queuePath);
-  } else {
-    fs.writeFileSync(queuePath, "");
-  }
+  fs.writeFileSync(queuePath, keep.length > 0 ? keep.join("\n") + "\n" : "");
   return digests;
+}
+
+/**
+ * 큐 항목의 `git_root` 와 맞춰야 하므로 **레포 루트로 정규화**한다.
+ * 하위 디렉토리에서 실행해도 같은 레포의 항목이 잡히게 하려는 것이다.
+ */
+function resolveGitRoot(dir) {
+  try {
+    return execFileSync("git", ["-C", dir, "rev-parse", "--show-toplevel"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return dir; // git 레포가 아니면 준 경로를 그대로 쓴다
+  }
 }
 
 function main() {
   const argv = process.argv.slice(2);
   if (argv[0] === "--drain") {
     const dirIdx = argv.indexOf("--dir");
-    const gitRoot = dirIdx >= 0 ? argv[dirIdx + 1] : process.cwd();
-    process.stdout.write(JSON.stringify(drain(gitRoot), null, 2) + "\n");
+    const dir = dirIdx >= 0 ? argv[dirIdx + 1] : process.cwd();
+    process.stdout.write(JSON.stringify(drain(resolveGitRoot(dir)), null, 2) + "\n");
     return;
   }
   // 단일 구간 모드
