@@ -97,6 +97,41 @@ export function projectSessionsDir(projectPath) {
   return homePath("sessions", projectSlug(projectPath));
 }
 
+/** 파이프라인 실패 로그. 훅·스크립트는 흐름을 막지 않으므로 실패를 삼키는데, 그러면
+ *  "왜 안 올라왔는지"를 진단할 수 없다. 이 파일에 남겨 관측만 가능하게 한다. */
+export const LOG_PATH = () => homePath("errors.jsonl");
+
+/** 로그 파일이 이보다 커지면 오래된 앞부분 절반을 버린다(무한 성장 방지). */
+const LOG_MAX_BYTES = 1_000_000;
+
+/**
+ * 실패를 errors.jsonl 에 한 줄(JSONL) 추가한다. 로그 쓰기 자체가 실패해도 삼킨다 —
+ * 로그는 흐름을 막지 않는다는 규칙의 예외가 아니다.
+ */
+export function appendLog(source, detail) {
+  try {
+    ensureHome();
+    const p = LOG_PATH();
+    // 크기 가드: 상한 초과 시 뒤 절반만 남긴다(최근 로그 우선).
+    try {
+      if (fs.statSync(p).size > LOG_MAX_BYTES) {
+        const lines = fs.readFileSync(p, "utf8").split("\n");
+        fs.writeFileSync(p, lines.slice(Math.floor(lines.length / 2)).join("\n"));
+      }
+    } catch {
+      /* 파일이 아직 없으면 그냥 새로 append 된다 */
+    }
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      source,
+      detail: String(detail),
+    });
+    fs.appendFileSync(p, line + "\n");
+  } catch {
+    /* 로그 실패도 흐름을 막지 않는다 */
+  }
+}
+
 /**
  * 업로드 설정을 읽는다. 환경변수가 config.json 을 이긴다(CI·일회성 override 용).
  *

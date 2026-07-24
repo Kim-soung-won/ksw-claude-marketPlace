@@ -28,6 +28,7 @@ import { execFileSync } from "node:child_process";
 import {
   CURSORS_PATH,
   QUEUE_PATH,
+  appendLog,
   ensureHome,
   readJson,
   writeJson,
@@ -108,10 +109,16 @@ function main() {
   if (!sessionId) return;
 
   const jsonlPath = resolveTranscript(input.transcript_path, sessionId);
-  if (!jsonlPath) return;
+  if (!jsonlPath) {
+    appendLog("capture", `세션 JSONL 을 찾지 못함 (session=${sessionId})`);
+    return;
+  }
 
   const gitRoot = safeGit(cwd, ["rev-parse", "--show-toplevel"]);
-  if (!gitRoot) return;
+  if (!gitRoot) {
+    appendLog("capture", `git root 를 찾지 못함 (cwd=${cwd})`);
+    return;
+  }
   const commit = safeGit(cwd, ["rev-parse", "HEAD"]) || "";
   const commitMessage = commit
     ? safeGit(cwd, ["log", "-1", "--pretty=%B", commit]) || ""
@@ -154,8 +161,9 @@ function main() {
 
 try {
   main();
-} catch {
-  /* 절대 커밋을 막지 않는다 */
+} catch (err) {
+  // 커밋은 막지 않되(항상 exit 0), 왜 캡처가 실패했는지는 로그로 남긴다.
+  appendLog("capture", `fatal: ${err}`);
 } finally {
   process.exit(0);
 }
