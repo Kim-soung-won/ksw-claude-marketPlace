@@ -70,17 +70,33 @@ while IFS= read -r plugin; do
     continue
   fi
 
-  # 버전 미변경 → HEAD 버전 기준 patch +1
-  major="${head_ver%%.*}"
-  rest="${head_ver#*.}"
-  minor="${rest%%.*}"
-  patch="${rest#*.}"
-  patch_num="$(printf '%s' "$patch" | grep -oE '^[0-9]+')"
-  [ -z "$patch_num" ] && patch_num=0
-  new_ver="${major}.${minor}.$((patch_num + 1))"
+  # 버전 미변경 → patch +1.
+  #
+  # 치환은 node 로 한다. 과거 `sed -E "0,/re/ s//repl/"` 를 썼으나 `0,/re/` 는
+  # GNU sed 확장이라 macOS 의 BSD sed 에서 에러 없이 조용히 no-op 되고 exit 0 을
+  # 반환했다 — 그 결과 파일은 안 바뀌는데 아래 로그는 "올렸다"고 찍혀, macOS 에서
+  # 커밋마다 버전이 소리 없이 누락됐다. node 는 검증기도 이미 전제하는 런타임이다.
+  if ! command -v node >/dev/null 2>&1; then
+    echo "pre-commit: node 없음 — $plugin version 자동 상승 불가. 수동으로 올린 뒤 다시 커밋하세요." >&2
+    exit 1
+  fi
 
-  sed -E "0,/\"version\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/ s//\"version\": \"$new_ver\"/" \
-    "$manifest" > "$manifest.tmp" && mv "$manifest.tmp" "$manifest"
+  new_ver="$(node -e '
+    const fs = require("fs"), p = process.argv[1];
+    const s = fs.readFileSync(p, "utf8");
+    const m = s.match(/"version"\s*:\s*"([^"]*)"/);
+    if (!m) process.exit(2);
+    const [a, b, c] = m[1].split(".");
+    const nv = `${a}.${b}.${Number(c) + 1}`;
+    fs.writeFileSync(p, s.replace(/("version"\s*:\s*")[^"]*(")/, `$1${nv}$2`));
+    process.stdout.write(nv);
+  ' "$manifest")"
+
+  # 조용한 실패 재발 방지 — 파일이 실제로 new_ver 로 바뀌었는지 확인한 뒤에만 진행한다.
+  if [ -z "$new_ver" ] || [ "$(get_version < "$manifest")" != "$new_ver" ]; then
+    echo "pre-commit: $plugin version 자동 상승 실패 — 수동으로 올린 뒤 다시 커밋하세요." >&2
+    exit 1
+  fi
   git add "$manifest"
   echo "pre-commit: $plugin version $head_ver -> $new_ver (파일 변경됨, version 미수정 → 자동 상승)"
 done <<EOF
