@@ -24,6 +24,9 @@ digest의 `signals`(그리고 timeline의 `flag`)를 우선 처리한다.
 
 > 감정 신호는 다음 세션을 조율하는 핵심 지표다. 부정 신호는 재발 방지 관점에서, 긍정
 > 신호는 강화할 패턴 관점에서 본다.
+>
+> `signals`는 timeline 상한(TIMELINE_LIMIT)과 **무관하게 항상 완전하다** — distill 이
+> 감정 신호를 timeline 유계화 이전에 따로 수집하므로, timeline 이 절단돼도 신호는 안 잃는다.
 
 ---
 
@@ -35,13 +38,17 @@ digest의 `signals`(그리고 timeline의 `flag`)를 우선 처리한다.
   일이었나, 아니면 메인이 직접 해도 될 일을 과하게 위임했나.
 - 반대로, 여러 파일을 훑는 대량 탐색·독립 트랙을 위임 없이 메인이 직접 처리하느라
   컨텍스트를 낭비하지 않았나.
-- 같은 성격의 에이전트를 반복 spawn(콜드 스타트 반복)하지 않았나.
+- 같은 성격의 에이전트를 반복 spawn(콜드 스타트 반복)하지 않았나. **spawn 횟수는 timeline
+  이 아니라 `agent_costs`의 `spawns`로 판단한다** — timeline 은 절단됐을 수 있지만
+  agent_costs 는 항상 완전하다.
 
 ## 2. 재작업·정정 루프 (rework loop)
 
 - `error: true` 항목, 또는 사용자 텍스트에 정정·되돌리기·"아니 그게 아니라" 성격의
   발화가 반복됐나. 그렇다면 무엇이 최초에 어긋났는지.
-- 같은 파일을 짧은 간격으로 여러 번 Edit하며 시행착오한 흔적이 있나.
+- 같은 파일을 짧은 간격으로 여러 번 Edit하며 시행착오한 흔적이 있나. 이 흔적은 개별 N개
+  항목이 아니라 tool 항목의 `repeat:n` 카운트로 접혀 있을 수 있으니, repeat 값을
+  버스트·재작업의 근거로 읽는다.
 
 ## 3. 도구 스코핑 (tool scoping)
 
@@ -54,6 +61,8 @@ digest의 `signals`(그리고 timeline의 `flag`)를 우선 처리한다.
 - `cost_tokens`에서 이 델타의 소비를 본다. output 대비 cache_creation이 큰 반복 spawn,
   또는 큰 컨텍스트 재구축이 있었나.
 - 델타 크기(event_count) 대비 소비가 유난히 큰 커밋이면 원인 지점을 지목한다.
+- `timeline_meta`의 절단 지표(collapsed_runs·dropped_tools 등)가 크면 그 자체가 "델타가
+  과도하게 컸다"는 비용 신호다 — 커밋을 더 잘게 나눌 여지가 있었는지 관찰로 남긴다.
 
 ## 5. 저장소 규범 준수 (repo norms)
 
