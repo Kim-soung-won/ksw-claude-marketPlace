@@ -39,6 +39,7 @@ import {
   QUEUE_PATH,
   appendLog,
   projectSessionsDir,
+  readJson,
 } from "../lib/factory-home.mjs";
 
 const TEXT_LIMIT = 600;
@@ -255,6 +256,107 @@ function distillCommit(entries, meta) {
 }
 
 /**
+ * 세션의 서브에이전트 사이드카 디렉터리를 유도한다. Claude Code 는 서브에이전트 턴을
+ * 메인 트랜스크립트가 아니라 `<...>/<sessionId>/subagents/agent-<id>.jsonl` 형제
+ * 디렉터리에 별도로 남긴다. jsonl_path 가 `.../<sessionId>.jsonl` 이므로 그 basename
+ * (확장자 제거)이 곧 sessionId 디렉터리다. 없거나 접근 실패면 null(→ graceful).
+ */
+function resolveSubagentsDir(meta) {
+  try {
+    const jp = meta && meta.jsonl_path;
+    if (typeof jp !== "string") return null;
+    const dir = path.join(path.dirname(jp), path.basename(jp, ".jsonl"), "subagents");
+    return fs.existsSync(dir) ? dir : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 서브에이전트 파일(agent-<id>.jsonl) 하나를 읽어 계량치를 집계한다. 메인 세션과 같은
+ * 규칙(addUsage)으로 토큰을, tool_use 개수로 도구호출을, tool_result.is_error 개수로
+ * 에러를 센다. 첫 이벤트 timestamp 는 toolUseId 폴백용. 읽기 실패면 로그 후 null.
+ */
+function readSubagentUsage(agentJsonlPath) {
+  let lines;
+  try {
+    lines = fs.readFileSync(agentJsonlPath, "utf8").split("\n");
+  } catch (err) {
+    appendLog("distill", `서브에이전트 파일 읽기 실패 (${path.basename(agentJsonlPath)}): ${err}`);
+    return null;
+  }
+  const m = { input: 0, output: 0, cache_read: 0, cache_creation: 0, tool_calls: 0, errors: 0 };
+  let firstTs = null;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let ev;
+    try {
+      ev = JSON.parse(trimmed);
+    } catch {
+      continue;
+    }
+    if (firstTs === null && typeof ev.timestamp === "string") firstTs = ev.timestamp;
+    const msg = ev.message;
+    if (ev.type === "assistant" && msg) {
+      addUsage(m, msg.usage);
+      for (const item of msg.content || []) {
+        if (item.type === "tool_use") m.tool_calls += 1;
+      }
+    } else if (ev.type === "user" && msg && Array.isArray(msg.content)) {
+      for (const item of msg.content) {
+        if (item.type === "tool_result" && item.is_error) m.errors += 1;
+      }
+    }
+  }
+  return { ...m, first_ts: firstTs };
+}
+
+/**
+ * 이 델타 구간에서 spawn 된 서브에이전트의 계량치를 사이드카에서 읽어 귀속한다.
+ * 반환 `[{ agentType, metrics }]`. 귀속 판정은 **toolUseId 우선, 시각 폴백**:
+ *   - meta.toolUseId 가 델타 내 Agent tool_use id 집합(toolUseIds)에 있으면 귀속 확정.
+ *   - toolUseId 가 없거나 집합에 없을 때만, 짝 .jsonl 의 first_ts 가 델타 시각 범위
+ *     [timeStart, timeEnd](둘 다 있을 때만) 안이면 귀속.
+ * 경량 meta.json 만 전수 스캔해 매핑을 구하고, 대용량 .jsonl 은 귀속 확정 건만 읽는다
+ * (무차별 폴더 읽기 금지 — 커밋 델타 정합성 유지). 실패 건은 로그 후 skip(throw 금지).
+ */
+function attributeSubagents({ subagentsDir, toolUseIds, timeStart, timeEnd }) {
+  if (!subagentsDir) return [];
+  let metaFiles;
+  try {
+    metaFiles = fs.readdirSync(subagentsDir).filter((f) => f.endsWith(".meta.json"));
+  } catch (err) {
+    appendLog("distill", `subagents 디렉터리 읽기 실패: ${err}`);
+    return [];
+  }
+  const out = [];
+  for (const mf of metaFiles) {
+    const meta = readJson(path.join(subagentsDir, mf), null);
+    if (!meta || typeof meta.agentType !== "string") continue;
+    const jsonlPath = path.join(subagentsDir, mf.replace(/\.meta\.json$/, ".jsonl"));
+
+    let attributed = false;
+    if (meta.toolUseId && toolUseIds.has(meta.toolUseId)) {
+      attributed = true;
+    } else {
+      // 폴백: toolUseId 매칭 실패 시에만 첫 이벤트 시각으로 판정.
+      const usage = readSubagentUsage(jsonlPath);
+      if (usage && usage.first_ts && timeStart && timeEnd &&
+          usage.first_ts >= timeStart && usage.first_ts <= timeEnd) {
+        out.push({ agentType: meta.agentType, metrics: usage });
+      }
+      continue;
+    }
+    if (attributed) {
+      const usage = readSubagentUsage(jsonlPath);
+      if (usage) out.push({ agentType: meta.agentType, metrics: usage });
+    }
+  }
+  return out;
+}
+
+/**
  * 이어붙인 라인 배열을 압축 digest 로 전처리한다. meta 는 커밋 신원
  * ({ session_id, commit, commit_message, cwd, git_root, captured_at }).
  */
@@ -262,12 +364,12 @@ function distillLines(lines, meta) {
   const timeline = [];
   const totals = { input: 0, output: 0, cache_read: 0, cache_creation: 0 };
   const agentsSeen = new Set();
-  // 에이전트별 결정론적 계량치(Sub-agents/Plugins 화면용). attributionAgent 태그된
-  // 이벤트에서만 토큰·tool_calls·errors 를 귀속한다 — 메인 세션 토큰은
-  // totals(cost_tokens)에 이미 있다. 다만 현재 Claude Code 세션 JSONL 은 sub-agent
-  // 이벤트에 attributionAgent 를 남기지 않는 경우가 있어(메인 트랜스크립트에는 Agent
-  // tool_use 만 보인다), 이 맵만으로는 sub-agent 가 통째로 누락된다 — 그래서 아래
-  // spawnCounts 가 sub-agent 존재의 1급 신호다.
+  // 에이전트별 결정론적 계량치(Sub-agents/Plugins 화면용). 두 소스에서 채운다:
+  //   1) 메인 트랜스크립트의 attributionAgent 태그(현재 이벤트 0건이나 향후 대비 유지).
+  //   2) 세션 subagents/agent-<id>.jsonl 사이드카 — 루프 뒤 attributeSubagents 가
+  //      델타 내 Agent tool_use id(toolUseId) 기준으로 읽어 이 맵에 누산한다.
+  // 메인 세션 토큰은 totals(cost_tokens)에 있고, 여기엔 더하지 않는다(메인/서브 분리).
+  // 사이드카가 없으면 아래 spawnCounts 로 spawn 수만 채운다(graceful degradation).
   const agentMetrics = new Map();
   // subagent_type 별 실제 spawn 횟수(Agent tool_use 카운트). attributionAgent 유무와
   // 무관하게 항상 잡히므로, agent_costs·agents 는 이 카운트를 기준으로 채운다.
@@ -275,6 +377,12 @@ function distillLines(lines, meta) {
   // 감정 신호: 부정=assistant 출력, 긍정=user 입력
   const signals = { negative_output: [], positive_input: [] };
   let events = 0;
+  // 이 델타 구간 안에서 spawn 된 Agent tool_use 의 id 집합. meta.toolUseId 와 짝이며,
+  // 서브에이전트 사이드카를 이 델타에 결정론적으로 귀속하는 1순위 키다(byte 구간 정합).
+  const deltaAgentToolUseIds = new Set();
+  // 델타의 시각 범위(ISO 문자열 사전식 비교). toolUseId 매칭 실패 시 폴백 판정에 쓴다.
+  let timeStart = null;
+  let timeEnd = null;
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -287,6 +395,10 @@ function distillLines(lines, meta) {
     }
     events++;
     if (ev.attributionAgent) agentsSeen.add(ev.attributionAgent);
+    if (typeof ev.timestamp === "string") {
+      if (timeStart === null || ev.timestamp < timeStart) timeStart = ev.timestamp;
+      if (timeEnd === null || ev.timestamp > timeEnd) timeEnd = ev.timestamp;
+    }
 
     const msg = ev.message;
     if (ev.type === "assistant" && msg) {
@@ -315,6 +427,8 @@ function distillLines(lines, meta) {
           if (item.name === "Agent" && item.input && item.input.subagent_type) {
             const st = item.input.subagent_type;
             spawnCounts.set(st, (spawnCounts.get(st) || 0) + 1);
+            // 이 tool_use 의 id 를 델타에 기록해 사이드카를 결정론적으로 귀속한다.
+            if (item.id) deltaAgentToolUseIds.add(item.id);
           }
           timeline.push(t);
         }
@@ -355,10 +469,33 @@ function distillLines(lines, meta) {
     }
   }
 
+  // 서브에이전트 토큰·도구호출·에러를 사이드카에서 읽어 귀속한다. 현재 Claude Code 는
+  // 서브에이전트 턴을 메인 트랜스크립트에 attributionAgent 로 남기지 않고
+  // `<sessionId>/subagents/agent-<id>.jsonl` 별도 파일에 둔다. meta.toolUseId 가 이 델타
+  // 안의 Agent tool_use id(deltaAgentToolUseIds)와 짝이면 그 사이드카를 이 델타에 귀속하고
+  // (toolUseId 부재/불일치 시 첫 이벤트 timestamp 폴백), 계량치를 agentMetrics 에 누산한다.
+  // 사이드카가 없으면(구세션·정리됨) 아래 spawnCounts 로 spawn 수만 채운다(graceful).
+  // 잔존하는 attributionAgent 기반 누산 경로도 유지하지만(현재 이벤트 0건, 향후 대비 무해),
+  // 둘이 동시에 존재하는 세션이 생기면 같은 에이전트를 이중 계상할 수 있다(현재는 없음).
+  for (const { agentType, metrics } of attributeSubagents({
+    subagentsDir: resolveSubagentsDir(meta),
+    toolUseIds: deltaAgentToolUseIds,
+    timeStart,
+    timeEnd,
+  })) {
+    const t = bumpAgent(agentMetrics, agentType);
+    t.input += metrics.input;
+    t.output += metrics.output;
+    t.cache_read += metrics.cache_read;
+    t.cache_creation += metrics.cache_creation;
+    t.tool_calls += metrics.tool_calls;
+    t.errors += metrics.errors;
+  }
+
   // 에이전트별 계량치와 spawn 수를 하나로 병합해 확정한다. 키는 전체 "plugin:agent"
-  // 문자열 — attributionAgent 와 subagent_type 이 같은 형식이라(bareAgentName 없이도)
-  // 자연히 합쳐진다. spawnCounts 를 시드로 삼으므로, 계량치(attributionAgent)가 전혀
-  // 없어도 spawn 된 에이전트는 반드시 항목이 생긴다(토큰류는 0, spawns 만 채워짐).
+  // 문자열 — attributionAgent·subagent_type·meta.agentType 이 모두 같은 형식이라
+  // 자연히 합쳐진다. spawnCounts 를 시드로 삼으므로, 계량치가 전혀 없어도 spawn 된
+  // 에이전트는 반드시 항목이 생긴다(토큰류는 0, spawns 만 채워짐).
   const costsByAgent = new Map();
   const ensureCost = (name) => {
     let m = costsByAgent.get(name);
