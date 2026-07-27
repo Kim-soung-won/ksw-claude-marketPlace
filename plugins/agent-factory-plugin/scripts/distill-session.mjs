@@ -19,6 +19,12 @@
  * JSONL 이벤트 스키마의 근거는 claude-code-jsonl 스킬이다.
  *
  * 사용:
+ *   node distill-session.mjs --all
+ *       ~/.agent-factory/queue.jsonl **전체**를 git_root별로 그룹핑해
+ *  각 그룹을 자기 레포
+ *       기준으로 distill해 커밋별 digest JSON 배열로 출력하고, 처리분을 processed.jsonl로
+ *       옮긴다. git_root 없는(구버전 훅) 항목은 귀속할 레포가 없어 큐에 남는다. 어느
+ *       경로에서 실행하든 사용자 레벨 큐 전체가 대상이다(cwd/gitRoot 인자 무관).
  *   node distill-session.mjs --drain [--dir <gitRoot>]
  *       ~/.agent-factory/queue.jsonl 중 **해당 레포(gitRoot)** 항목만 distill해 JSON
  *       배열로 출력하고, 처리분을 processed.jsonl로 옮긴다. 다른 레포 항목은 큐에 남는다.
@@ -482,39 +488,24 @@ function commitExists(gitRoot, sha) {
 }
 
 /**
- * 큐에서 `gitRoot` 레포 항목을 골라 **커밋 단위로 병합**해 distill 하고, 큐에서 제거한다.
+ * 한 레포(gitRoot)의 큐 항목(mine: [{ entry, line }])을 **커밋 단위로 병합**해 distill 한다.
+ * 파일 I/O 를 하지 않고 `{ digests, processed, keepLines }` 만 산출한다 — 큐 재작성·
+ * processed.jsonl append 는 호출자(drain·drainAll)가 담당해, 단일 레포/전체 큐 어느
+ * 경로에서든 이 그룹 처리 코어를 그대로 재사용한다.
  *
  * 한 세션에서 git commit 을 여러 번(커밋·amend·reset 후 재커밋) 실행하면 capture 가 같은
  * sha 에 여러 델타 구간을 큐에 쌓는다. 여기서 같은 커밋의 구간들을 하나의 digest 로 합쳐
  * **커밋당 기록 1개**를 만든다. amend/reset 로 사라진 고아 커밋의 델타는 offset 상 바로
- * 뒤따르는 실 커밋에 접어 넣는다(fold-forward) — 뒤 커밋이 아직 없으면 큐에 남겨 다음
- * drain 으로 미룬다(작업 유실·존재하지 않는 커밋 전송 둘 다 방지).
+ * 뒤따르는 실 커밋에 접어 넣는다(fold-forward) — 뒤 커밋이 아직 없으면 keepLines 로 넘겨
+ * 큐에 남긴다(작업 유실·존재하지 않는 커밋 전송 둘 다 방지). commitExists 는 이 gitRoot
+ * 히스토리를 기준으로 조회하므로 그룹마다 자기 레포의 liveness 로 정확히 계산된다.
  *
- * 다른 레포 항목·파싱 실패 라인·distill 실패 그룹은 큐에 남겨 다음 기회에 재시도한다.
+ * 파싱 실패 라인은 호출자가 이미 걸렀고, distill 실패 그룹은 keepLines 로 남겨 재시도한다.
  */
-function drain(gitRoot) {
-  const queuePath = QUEUE_PATH();
-  if (!fs.existsSync(queuePath)) return [];
-
-  const lines = fs.readFileSync(queuePath, "utf8").split("\n").filter((l) => l.trim());
-  const keep = [];
-  const mine = []; // 이 레포 항목: { entry, line }
-
-  for (const line of lines) {
-    let entry;
-    try {
-      entry = JSON.parse(line);
-    } catch {
-      continue; // 깨진 줄은 버린다
-    }
-    // git_root 가 없는 항목은 구버전 훅이 남긴 것이라 판별 불가 → 이 레포 것으로 본다.
-    const owner = entry.git_root ?? gitRoot;
-    if (owner !== gitRoot) {
-      keep.push(line);
-      continue;
-    }
-    mine.push({ entry, line });
-  }
+function distillGroup(gitRoot, mine) {
+  const keepLines = [];
+  const digests = [];
+  const processed = [];
 
   // offset 오름차순(안정 정렬). 같은 sha 델타는 워터마크상 연속 구간이라 순서가 확정된다.
   mine.sort((a, b) => (a.entry.from_offset || 0) - (b.entry.from_offset || 0));
@@ -547,11 +538,8 @@ function drain(gitRoot) {
       pendingOrphans.push(item);
     }
   }
-  // 뒤따르는 실 커밋이 이번 drain 에 없는 말미 고아 → 큐에 남겨 다음 drain 으로 미룬다.
-  for (const o of pendingOrphans) keep.push(o.line);
-
-  const digests = [];
-  const processed = [];
+  // 뒤따르는 실 커밋이 이번 처리에 없는 말미 고아 → 큐에 남겨 다음 기회로 미룬다.
+  for (const o of pendingOrphans) keepLines.push(o.line);
 
   for (const g of groups) {
     const all = [...g.own, ...g.folded].sort(
@@ -573,9 +561,102 @@ function drain(gitRoot) {
         processed.push({ ...x.entry, processed: true, distilled_at: new Date().toISOString() });
       }
     } catch (err) {
-      for (const x of all) keep.push(x.line); // 그룹 단위 롤백 → 큐에 남겨 재시도
+      for (const x of all) keepLines.push(x.line); // 그룹 단위 롤백 → 큐에 남겨 재시도
       appendLog("distill", `distill 실패 (${meta.commit?.slice(0, 7) ?? "?"}): ${err}`);
     }
+  }
+
+  return { digests, processed, keepLines };
+}
+
+/**
+ * 큐에서 `gitRoot` 레포 항목을 골라 커밋 단위로 병합해 distill 하고, 큐에서 제거한다.
+ * 그룹 처리 코어는 distillGroup 이 담당하고, 여기서는 큐 파티션(mine/others)과 파일
+ * I/O(큐 재작성·processed append)만 맡는다. 다른 레포 항목은 큐에 남겨 둔다.
+ */
+function drain(gitRoot) {
+  const queuePath = QUEUE_PATH();
+  if (!fs.existsSync(queuePath)) return [];
+
+  const lines = fs.readFileSync(queuePath, "utf8").split("\n").filter((l) => l.trim());
+  const keep = [];
+  const mine = []; // 이 레포 항목: { entry, line }
+
+  for (const line of lines) {
+    let entry;
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue; // 깨진 줄은 버린다
+    }
+    // git_root 가 없는 항목은 구버전 훅이 남긴 것이라 판별 불가 → 이 레포 것으로 본다.
+    const owner = entry.git_root ?? gitRoot;
+    if (owner !== gitRoot) {
+      keep.push(line);
+      continue;
+    }
+    mine.push({ entry, line });
+  }
+
+  const { digests, processed, keepLines } = distillGroup(gitRoot, mine);
+  keep.push(...keepLines);
+
+  if (processed.length > 0) {
+    fs.appendFileSync(
+      PROCESSED_PATH(),
+      processed.map((p) => JSON.stringify(p)).join("\n") + "\n",
+    );
+  }
+  fs.writeFileSync(queuePath, keep.length > 0 ? keep.join("\n") + "\n" : "");
+  return digests;
+}
+
+/**
+ * 큐 **전체**를 git_root별로 그룹핑해 각 그룹을 자기 레포 기준으로 distill 한다. 저장이
+ * 사용자 레벨(머신당 1큐)로 통합돼 있으므로, 어느 경로에서 실행하든 큐에 쌓인 모든 레포의
+ * 미처리 델타를 처리한다(레포 스코프인 --drain 과 대비).
+ *
+ * git_root 없는(구버전 훅) 항목은 귀속할 레포가 없어 유효한 sessions_dir 를 만들 수 없다 →
+ * 큐에 남기고 로그만 남긴다(작업 유실 방지). 처리분은 processed.jsonl 로 옮기고 큐는 단
+ * 한 번만 재작성한다. 한 레포 그룹의 distill 실패는 그룹 단위 롤백(keepLines)으로 격리돼
+ * 다른 레포 그룹 처리를 막지 않는다.
+ */
+function drainAll() {
+  const queuePath = QUEUE_PATH();
+  if (!fs.existsSync(queuePath)) return [];
+
+  const lines = fs.readFileSync(queuePath, "utf8").split("\n").filter((l) => l.trim());
+  const keep = [];
+  const byRoot = new Map(); // gitRoot → [{ entry, line }]
+
+  for (const line of lines) {
+    let entry;
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue; // 깨진 줄은 버린다
+    }
+    if (!entry.git_root) {
+      // 귀속할 레포가 없어 sessions_dir 를 못 만든다 → 큐 잔류 + 관측 로그.
+      keep.push(line);
+      appendLog("distill", "git_root 없는 큐 항목 --all에서 스킵");
+      continue;
+    }
+    let arr = byRoot.get(entry.git_root);
+    if (!arr) {
+      arr = [];
+      byRoot.set(entry.git_root, arr);
+    }
+    arr.push({ entry, line });
+  }
+
+  const digests = [];
+  const processed = [];
+  for (const [gitRoot, mine] of byRoot) {
+    const res = distillGroup(gitRoot, mine);
+    digests.push(...res.digests);
+    processed.push(...res.processed);
+    keep.push(...res.keepLines);
   }
 
   if (processed.length > 0) {
@@ -605,6 +686,11 @@ function resolveGitRoot(dir) {
 
 function main() {
   const argv = process.argv.slice(2);
+  if (argv[0] === "--all") {
+    // 큐 전체(모든 레포)를 처리한다. cwd/gitRoot 인자를 받지 않는다.
+    process.stdout.write(JSON.stringify(drainAll(), null, 2) + "\n");
+    return;
+  }
   if (argv[0] === "--drain") {
     const dirIdx = argv.indexOf("--dir");
     const dir = dirIdx >= 0 ? argv[dirIdx + 1] : process.cwd();
@@ -614,7 +700,7 @@ function main() {
   // 단일 구간 모드
   const jsonlPath = argv[0];
   if (!jsonlPath) {
-    process.stderr.write("usage: distill-session.mjs --drain | <jsonlPath> [--from-offset N] [--to-offset M]\n");
+    process.stderr.write("usage: distill-session.mjs --all | --drain [--dir <gitRoot>] | <jsonlPath> [--from-offset N] [--to-offset M]\n");
     process.exit(1);
   }
   const getNum = (flag) => {

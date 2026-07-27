@@ -41,17 +41,31 @@ model: inherit
 
 ### 1단계 — 큐 distill
 
-작업 대상 레포(git root, 보통 현재 작업 디렉토리)에서 전처리 스크립트를 실행해 미처리
-큐를 digest 배열로 받는다:
+큐는 사용자 레벨(`~/.agent-factory/queue.jsonl`, 머신당 1개)이며 항목마다 자기 `git_root`를
+지닌다. 어느 모드로 distill할지 먼저 정한다:
 
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/distill-session.mjs" --drain
-```
+- **전체 모드(`--all`) — 기본으로 삼는다.** 현재 작업 디렉토리가 git repo가 아니거나
+  (`git rev-parse --show-toplevel` 실패), 사용자가 "어디서든/전체/모든 레포/agent-factory
+  큐 전체"처럼 특정 레포에 한정하지 않은 요청이면 큐 전체를 git_root별로 그룹핑해 각 레포
+  기준으로 처리한다:
 
-- 출력은 커밋별 digest의 JSON 배열이다. 빈 배열이면 처리할 커밋이 없다는 뜻이니 그렇게
-  보고하고 종료한다.
-- 스크립트는 처리한 큐 항목을 `processed.jsonl`로 옮기고 큐를 비운다 — 상태 변경은
+  ```bash
+  node "${CLAUDE_PLUGIN_ROOT}/scripts/distill-session.mjs" --all
+  ```
+
+- **레포 스코프(`--drain`).** 사용자가 "이 레포만/지금 이 프로젝트"처럼 현재 레포에 한정할
+  때만 쓴다. 현재 작업 디렉토리의 git root 항목만 처리하고 다른 레포 항목은 큐에 남긴다:
+
+  ```bash
+  node "${CLAUDE_PLUGIN_ROOT}/scripts/distill-session.mjs" --drain
+  ```
+
+- 두 모드 모두 출력은 커밋별 digest의 JSON 배열이다. 빈 배열이면 처리할 커밋이 없다는
+  뜻이니 그렇게 보고하고 종료한다.
+- 스크립트는 처리한 큐 항목을 `processed.jsonl`로 옮기고 큐에서 뺀다 — 상태 변경은
   스크립트가 담당하므로 큐 파일을 직접 편집하지 않는다.
+- `--all`의 각 digest는 자기 `project_path`/`sessions_dir`를 담으므로, 2·3단계 로직은
+  변경 없이 서로 다른 레포의 digest를 그대로(각자의 `sessions_dir`에) 처리할 수 있다.
 
 ### 2단계 — 요약 + 피드백 추출
 
