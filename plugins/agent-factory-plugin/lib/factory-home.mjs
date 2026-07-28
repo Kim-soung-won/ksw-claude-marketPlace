@@ -22,6 +22,7 @@
  * ~/.agent-factory/
  *   config.json     apiBase · token       (사용자가 만든다. chmod 600 권장)
  *   cursors.json    세션별 워터마크
+ *   session-hygiene.json  세션별 컨텍스트 크기 시계열·누적 리셋 카운터 (distill 소유)
  *   queue.jsonl     미처리 델타 (항목마다 git_root 를 지닌다)
  *   processed.jsonl 처리 완료 로그
  *   state.json      업로드 완료 해시
@@ -74,6 +75,9 @@ export function writeJson(file, data) {
 
 export const CONFIG_PATH = () => homePath("config.json");
 export const CURSORS_PATH = () => homePath("cursors.json");
+// 세션 위생 시계열 저장소. cursors.json(훅 소유)과 분리해 distill 이 소유한다 —
+// 소유권·동시성을 나눠 훅의 경량 계약을 침범하지 않는다.
+export const HYGIENE_PATH = () => homePath("session-hygiene.json");
 export const QUEUE_PATH = () => homePath("queue.jsonl");
 export const PROCESSED_PATH = () => homePath("processed.jsonl");
 export const STATE_PATH = () => homePath("state.json");

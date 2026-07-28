@@ -41,7 +41,7 @@ import {
 // 가드2(커밋 최신성 백스톱)의 창. HEAD 커밋의 committer 시각이 지금으로부터 이 초 이내가
 // 아니면 방금 만든 커밋이 아니라고 본다. 훅 발동 지연·느린 pre-commit 체인을 고려한 여유값
 // 이며 실측으로 튜닝 가능하다. 명령으로 git commit 임이 확정되면 이 검사 자체를 건너뛴다.
-const COMMIT_RECENCY_WINDOW_SEC = 90;
+const COMMIT_RECENCY_WINDOW_SEC = 300;
 
 // 트리거 명령이 실제 git commit 실행인지 판정한다. 복합 명령(`git add . && git commit …`)도
 // 매칭되도록 명령 시작·구분자(;·&·|) 뒤의 `git commit` 을 본다.
@@ -175,7 +175,7 @@ function main() {
   if (!commandConfirmsCommit) {
     const ctRaw = commit ? safeGit(cwd, ["log", "-1", "--format=%ct", commit]) : null;
     const ct = ctRaw ? parseInt(ctRaw, 10) : NaN;
-    if (!commit || Number.isNaN(ct)) {
+    if (Number.isNaN(ct)) {
       appendLog("capture", `HEAD 커밋 시각 확인 불가 — skip (session=${sessionId})`);
       return;
     }
@@ -191,6 +191,10 @@ function main() {
   const toUuid = lastUuid(jsonlPath);
 
   // 파일이 직전 워터마크보다 짧아졌으면(재작성/compaction) 처음부터 다시 잡는다.
+  // 이 축소는 곧 세션 리셋(compact/clear) 신호다 — stat 으로 이미 잡은 offset 비교뿐이라
+  // JSONL 내용을 읽지 않는다(훅 경량 계약 유지). 리셋의 '집계'는 distill 이 맡고, 훅은
+  // 사실(shrank) 1비트만 방출한다.
+  const shrank = toOffset < prev.offset;
   const fromOffset = toOffset >= prev.offset ? prev.offset : 0;
   const fromUuid = toOffset >= prev.offset ? prev.uuid : null;
 
@@ -207,6 +211,8 @@ function main() {
     cwd,
     // 큐가 사용자 레벨로 모이므로 어느 레포의 델타인지 항목이 스스로 밝혀야 한다.
     git_root: gitRoot,
+    // 세션 리셋(compact/clear) 신호. distill 이 커밋 간 누적 리셋으로 집계한다.
+    shrank,
     captured_at: capturedAt,
     processed: false,
   };
