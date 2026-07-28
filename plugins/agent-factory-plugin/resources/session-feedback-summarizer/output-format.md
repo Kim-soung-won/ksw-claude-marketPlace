@@ -70,6 +70,18 @@ feedback-rubric.md의 축별로, digest에서 실제로 근거가 있는 항목�
   timeline 이 상한(TIMELINE_LIMIT)으로 압축·절단된 것이다(원본 `total_original`개). 절단된
   부분은 요약·피드백의 근거로 삼지 않는다. 절단 규모가 크면 그 자체가 "델타가 과도하게
   컸다"는 비용 신호이니 관찰로 남긴다.
+
+## 세션 위생 (context hygiene)
+
+`digest.hygiene_delta`(델타 스코프)와 `digest.delta_shrank`를 서술한다. 안티패턴은
+"캐시읽기가 크다"가 아니라 **관련 없는 컨텍스트를 리셋 없이 누적한 것**임을 전제로 읽는다.
+
+- `hygiene_delta.max_turn_context_jump`가 크면 **단일 턴 대용량 덤프**(대용량 Read 등을
+  컨텍스트에 끌어들여 이후 턴마다 재청구)를 의심하고 timeline 에서 그 지점을 짚는다.
+- `hygiene_delta.tool_result_spikes`는 재청구를 유발한 tool_result 길이 목록이다.
+- `hygiene_delta.cr_gen_ratio`가 크면 재청구되는 컨텍스트 세(稅)가 크다는 신호이나, 비율
+  자체는 병이 아니다 — 캐싱은 완화제다. 세션 길이·기울기와 **함께** 볼 때만 낭비로 읽는다.
+- `delta_shrank`가 true 면 이 커밋 델타에서 compact/clear(세션 리셋)가 있었다는 뜻이다.
 ```
 
 ## 작성 규칙
@@ -79,3 +91,7 @@ feedback-rubric.md의 축별로, digest에서 실제로 근거가 있는 항목�
   단 `signals`·`agents`·`cost_tokens`·`agent_costs`는 상한과 무관하게 항상 완전하다.
 - 요약·피드백은 한국어로 간결하게. 원본 파일 내용 전문을 다시 붙여넣지 않는다(이미
   distill 단계에서 걷어낸 부피를 되살리지 않는다).
+- **세션 누적 위생 수치(`context_slope`·`session_resets`)는 digest 에 없다** — 커밋 간
+  증분 복원이 필요해 distill 이 metrics.json 사이드카에만 싣는다. `.md` 요약은 델타 스코프
+  (`hygiene_delta`·`delta_shrank`)만 서술하고, 세션 기울기·누적 리셋을 지어내지 않는다.
+  그 수치의 권위 원천은 metrics.json 이고 서버·UI 가 소비한다.

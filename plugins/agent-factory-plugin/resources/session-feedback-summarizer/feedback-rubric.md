@@ -63,6 +63,11 @@ digest의 `signals`(그리고 timeline의 `flag`)를 우선 처리한다.
 - 델타 크기(event_count) 대비 소비가 유난히 큰 커밋이면 원인 지점을 지목한다.
 - `timeline_meta`의 절단 지표(collapsed_runs·dropped_tools 등)가 크면 그 자체가 "델타가
   과도하게 컸다"는 비용 신호다 — 커밋을 더 잘게 나눌 여지가 있었는지 관찰로 남긴다.
+- **세션 위생 신호**(`hygiene_delta`·`delta_shrank`): `max_turn_context_jump`가 큰데
+  그 급증이 저가치 대용량 덤프(대용량 Read 등)에서 왔다면, 이후 턴마다 재청구되는 낭비다 —
+  필터링해 읽거나 컨텍스트에 들이지 않을 여지가 있었는지 관찰로 남긴다. `cr_gen_ratio`는
+  단독으로 낭비 판정에 쓰지 않는다(캐싱은 완화제이지 병이 아니다). 세션 누적 기울기·리셋은
+  digest 에 없으니(사이드카 전용) 이 축에서 판단하지 않는다.
 
 ## 5. 저장소 규범 준수 (repo norms)
 
