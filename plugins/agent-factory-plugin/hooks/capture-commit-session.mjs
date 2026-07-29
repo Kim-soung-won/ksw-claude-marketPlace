@@ -5,12 +5,17 @@
  * 무조건 실행되는 hook이므로 규칙은 단 하나다: **가볍고, 절대 커밋을 막지 않는다.**
  * LLM을 부르지 않고, 세션 JSONL도 통째로 읽지 않는다. 하는 일은:
  *   1. stdin hook JSON에서 session_id·cwd·transcript_path·tool_input 을 읽는다.
- *   2. 방금 성사된 커밋 sha와 커밋된 레포의 git root를 구한다.
+ *   2. 커밋 대상 레포를 정한다 — 명령 문자열의 `git -C <path>`·선행 `cd <path>` 를
+ *      먼저 보고(실제 git 레포인지 rev-parse 로 확인), 없으면 세션 cwd 로 물러선다.
+ *      그 레포에서 방금 성사된 커밋 sha 와 git root 를 구한다. 세션 cwd 가 커밋한
+ *      레포와 다른 경우(레포 밖에서 세션을 열고 `cd <repo> && git commit`)의 누락·
+ *      오귀속을 막기 위함이다.
  *   3. **4중 가드로 실제 새 커밋인지 검증한다** — (가드3) 트리거 명령이 정말
  *      git commit 인지, (가드1) HEAD 가 이 세션의 마지막 캡처 sha 에서 전진했는지,
  *      (가드1b) 같은 레포에서 이 sha 를 다른 세션이 이미 캡처하지 않았는지,
- *      (가드2) 명령으로 확정 못 한 경우 HEAD 커밋이 방금 만들어졌는지. 하나라도
- *      걸리면 큐에 적재하지 않고 조용히 종료한다(유령 커밋 기록 방지).
+ *      (가드2) HEAD 커밋이 방금 만들어졌는지(경로 파싱이 빗나가 엉뚱한 레포를 가리켜도
+ *      거짓 기록을 막는 안전망 — 명령이 git commit 으로 확정돼도 건너뛰지 않는다).
+ *      하나라도 걸리면 큐에 적재하지 않고 조용히 종료한다(유령 커밋 기록 방지).
  *
  *      가드1b 가 따로 필요한 이유: 세션 커서는 session_id 로만 키잉되므로 새 세션에서는
  *      prev.commit 이 null 이라 가드1 이 그대로 통과한다. 실제로 한 커밋이 서로 다른
@@ -55,12 +60,17 @@ import {
 
 // 가드2(커밋 최신성 백스톱)의 창. HEAD 커밋의 committer 시각이 지금으로부터 이 초 이내가
 // 아니면 방금 만든 커밋이 아니라고 본다. 훅 발동 지연·느린 pre-commit 체인을 고려한 여유값
-// 이며 실측으로 튜닝 가능하다. 명령으로 git commit 임이 확정되면 이 검사 자체를 건너뛴다.
+// 이며 실측으로 튜닝 가능하다. 오귀속(다른 레포의 오래된 HEAD)을 막기 위해 명령이 git
+// commit 으로 확정돼도 이 검사는 건너뛰지 않는다 — 대신 `git commit && <오래 걸리는 작업>`
+// 한 줄에서 훅이 창 밖에 늦게 발동하면 진짜 커밋을 놓칠 수 있다(이 방향의 트레이드오프를 택했다).
 const COMMIT_RECENCY_WINDOW_SEC = 300;
 
 // 트리거 명령이 실제 git commit 실행인지 판정한다. 복합 명령(`git add . && git commit …`)도
-// 매칭되도록 명령 시작·구분자(;·&·|) 뒤의 `git commit` 을 본다.
-const GIT_COMMIT_RE = /(^|[;&|]\s*)git\s+commit\b/;
+// 매칭되도록 명령 시작·구분자(;·&·|) 뒤의 `git commit` 을 본다. subcommand 앞의 전역 옵션
+// (`git -C <path> commit`, `git -c k=v commit`, `git --git-dir=… commit`)도 커밋으로 인정한다 —
+// 다른 레포를 겨냥한 `git -C <repo> commit` 이 가드3 에서 비-커밋으로 오분류돼 누락되지 않도록.
+const GIT_COMMIT_RE =
+  /(^|[;&|]\s*)git\s+(?:-C\s+\S+\s+|-c\s+\S+\s+|--\S+\s+|-\w+\s+)*commit\b/;
 
 // 같은 HEAD 를 의도적으로 다시 캡처하고 싶을 때의 탈출구. 중복 가드(가드1·가드1b)만
 // 우회하며, 가드2·가드3(진짜 커밋인지 검증)은 우회하지 않는다 — 유령 커밋 방지는
@@ -78,6 +88,55 @@ function safeGit(cwd, args) {
   } catch {
     return null;
   }
+}
+
+/**
+ * 커밋이 실제로 실행된 대상 디렉터리를 명령 문자열에서 뽑는다.
+ *
+ * 세션 cwd 가 커밋한 레포와 다른 경우(`cd <repo> && git commit`, `git -C <repo> commit`)
+ * 를 위해 cwd 보다 우선할 후보 경로를 만든다. 셸 문법 변형(변수 전개 `$`·글롭 `*`·백틱·
+ * pushd 등)은 파싱하지 않고 null 로 물러선다 — 확인 못 한 경로로 잘못 귀속하느니 cwd
+ * 폴백과 가드2(커밋 최신성)에 맡긴다. 반환 경로가 실제 git 레포인지는 호출부가 rev-parse
+ * 로 확인한다. 상대 경로는 baseCwd(세션 cwd) 기준으로 절대화한다.
+ *
+ * @param command 트리거 Bash 명령 문자열(없으면 null)
+ * @param baseCwd 상대 경로 절대화 기준(세션 cwd)
+ * @returns 절대 경로 후보 또는 null
+ */
+function parseCommitTargetDir(command, baseCwd) {
+  if (!command) return null;
+  const expandTilde = (p) =>
+    p === "~"
+      ? os.homedir()
+      : p.startsWith("~/")
+        ? path.join(os.homedir(), p.slice(2))
+        : p;
+  const unresolvable = (p) => p.includes("$") || p.includes("*") || p.includes("`");
+
+  // 1) `git -C <path>` 가 커밋 대상을 가장 명시적으로 지정한다.
+  const cMatch = command.match(/\bgit\s+-C\s+(?:"([^"]+)"|'([^']+)'|(\S+))/);
+  if (cMatch) {
+    const raw = cMatch[1] ?? cMatch[2] ?? cMatch[3];
+    if (unresolvable(raw)) return null;
+    const p = expandTilde(raw);
+    return path.isAbsolute(p) ? p : path.resolve(baseCwd, p);
+  }
+
+  // 2) 없으면 git commit 세그먼트 앞의 선행 `cd` 들을 순서대로 누적한다(상대 cd 체인 대응).
+  let acc = baseCwd;
+  let found = false;
+  for (const seg of command.split(/&&|;/)) {
+    const s = seg.trim();
+    if (/\bgit\s+commit\b/.test(s)) break;
+    const cd = s.match(/^cd\s+(?:"([^"]+)"|'([^']+)'|(\S+))/);
+    if (!cd) continue;
+    const raw = cd[1] ?? cd[2] ?? cd[3];
+    if (unresolvable(raw)) return null;
+    const p = expandTilde(raw);
+    acc = path.isAbsolute(p) ? p : path.resolve(acc, p);
+    found = true;
+  }
+  return found ? acc : null;
 }
 
 /**
@@ -151,14 +210,12 @@ function main() {
     input.tool_input && typeof input.tool_input.command === "string"
       ? input.tool_input.command
       : null;
-  let commandConfirmsCommit = false;
-  if (command !== null) {
-    if (GIT_COMMIT_RE.test(command)) {
-      commandConfirmsCommit = true;
-    } else {
-      appendLog("capture", `git commit 아닌 명령에 발동 — skip (cmd=${command.slice(0, 80)})`);
-      return;
-    }
+  // command 가 있는데 git commit 이 아니면 즉시 skip. 없거나 문자열이 아니면(스키마 변형·
+  // 구버전) '불확실'로 두고 통과 — 증거 없음을 근거로 커밋을 누락시키지 않는다. 이 '불확실'은
+  // 아래 가드2(최신성)가 백스톱으로 받는다(이제 무조건 실행되므로 백스톱이 항상 작동한다).
+  if (command !== null && !GIT_COMMIT_RE.test(command)) {
+    appendLog("capture", `git commit 아닌 명령에 발동 — skip (cmd=${command.slice(0, 80)})`);
+    return;
   }
 
   const jsonlPath = resolveTranscript(input.transcript_path, sessionId);
@@ -167,14 +224,32 @@ function main() {
     return;
   }
 
-  const gitRoot = safeGit(cwd, ["rev-parse", "--show-toplevel"]);
+  // A — 커밋 대상 레포를 정한다. 명령 문자열의 명시 경로(git -C / 선행 cd)를 세션 cwd 보다
+  // 우선하되, 각 후보가 실제 git 레포인지 rev-parse 로 확인하고 첫 성공을 effectiveCwd 로
+  // 쓴다. 파싱이 빗나가(=명시 경로가 레포가 아님) 실패하면 cwd 로 물러선다. 이후 모든 git
+  // 조회(HEAD·메시지·최신성)는 effectiveCwd 기준으로 한다 — cwd 기준 오귀속(케이스3)의 뿌리.
+  const explicitTarget = parseCommitTargetDir(command, cwd);
+  const candidates = explicitTarget ? [explicitTarget, cwd] : [cwd];
+  let gitRoot = null;
+  let effectiveCwd = cwd;
+  for (const cand of candidates) {
+    const root = safeGit(cand, ["rev-parse", "--show-toplevel"]);
+    if (root) {
+      gitRoot = root;
+      effectiveCwd = cand;
+      break;
+    }
+  }
   if (!gitRoot) {
-    appendLog("capture", `git root 를 찾지 못함 (cwd=${cwd})`);
+    appendLog(
+      "capture",
+      `git root 를 찾지 못함 (cwd=${cwd}${explicitTarget ? `, target=${explicitTarget}` : ""})`,
+    );
     return;
   }
-  const commit = safeGit(cwd, ["rev-parse", "HEAD"]) || "";
+  const commit = safeGit(effectiveCwd, ["rev-parse", "HEAD"]) || "";
   const commitMessage = commit
-    ? safeGit(cwd, ["log", "-1", "--pretty=%B", commit]) || ""
+    ? safeGit(effectiveCwd, ["log", "-1", "--pretty=%B", commit]) || ""
     : "";
 
   if (!ensureHome()) return;
@@ -231,12 +306,12 @@ function main() {
     appendLog("capture", `FORCE_CAPTURE — 중복 가드 우회 (${commit.slice(0, 7)})`);
   }
 
-  // 가드2 — 커밋 최신성 백스톱. 명령으로 커밋을 확정한 경우엔 건너뛴다(커밋 뒤 긴 작업이
-  // 이어진 한 줄 명령에서 훅이 늦게 발동해도 진짜 커밋을 놓치지 않기 위함). 명령이 '불확실'
-  // 할 때만, HEAD 커밋의 committer 시각이 창 밖이면 방금 만든 게 아니므로 skip한다. 시각을
-  // 확인할 수 없으면(불확실 + 증거 없음) 보수적으로 skip한다 — 유령 기록을 만들지 않는다.
-  if (!commandConfirmsCommit) {
-    const ctRaw = commit ? safeGit(cwd, ["log", "-1", "--format=%ct", commit]) : null;
+  // 가드2 — 커밋 최신성 백스톱. 명령이 git commit 으로 확정돼도 건너뛰지 않는다(오귀속 방지):
+  // A 의 경로 파싱이 빗나가 effectiveCwd 가 실제 커밋 레포와 어긋나면 그 레포의 HEAD 는 방금
+  // 만든 커밋이 아니므로 여기서 걸린다. HEAD 커밋의 committer 시각이 창 밖이면 skip, 시각을
+  // 확인할 수 없으면 보수적으로 skip한다 — 유령/거짓 기록을 만들지 않는다.
+  {
+    const ctRaw = commit ? safeGit(effectiveCwd, ["log", "-1", "--format=%ct", commit]) : null;
     const ct = ctRaw ? parseInt(ctRaw, 10) : NaN;
     if (Number.isNaN(ct)) {
       appendLog("capture", `HEAD 커밋 시각 확인 불가 — skip (session=${sessionId})`);
