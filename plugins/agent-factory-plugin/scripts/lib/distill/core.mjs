@@ -20,6 +20,7 @@ import {
   STDOUT_HEAD,
   RESULT_SPIKE_MIN,
   MAX_SPIKE_CANDIDATES,
+  USER_INPUT_SPIKE_MIN,
   NEGATIVE_OUTPUT_MARKERS,
   POSITIVE_INPUT_MARKERS,
 } from "./constants.mjs";
@@ -89,6 +90,21 @@ export function distillLines(lines, meta) {
   // assistant 턴 카운터 — tool_result 의 "생성 시점 턴 인덱스"로 쓰이며, 잔류 턴 수 계산의 기준.
   let assistantTurns = 0;
   const resultSpikeCandidates = [];
+  // 스파이크 후보를 넣고 버퍼 상한 초과 시 len 최소를 evict 한다(메모리 유계화). tool_result·
+  // user_input 양쪽이 공유한다. 최종 순위·상한은 finalizeResultSpikes 가 재청구 비용으로 정한다.
+  const pushSpike = (cand) => {
+    resultSpikeCandidates.push(cand);
+    if (resultSpikeCandidates.length > MAX_SPIKE_CANDIDATES) {
+      let minIdx = 0;
+      for (let k = 1; k < resultSpikeCandidates.length; k++) {
+        if (resultSpikeCandidates[k].len < resultSpikeCandidates[minIdx].len) minIdx = k;
+      }
+      resultSpikeCandidates.splice(minIdx, 1);
+    }
+  };
+  // tool_use id → {tool, target}. 이후 나오는 큰 tool_result 를 그 원인(어떤 도구가 무엇을
+  // 대상으로)에 귀속해, 컨텍스트 급상승의 정체를 스파이크에 라벨로 붙인다.
+  const toolUseById = new Map();
   let events = 0;
   // 이 델타 구간 안에서 spawn 된 Agent tool_use 의 id 집합. meta.toolUseId 와 짝이며,
   // 서브에이전트 사이드카를 이 델타에 결정론적으로 귀속하는 1순위 키다(byte 구간 정합).
@@ -148,6 +164,8 @@ export function distillLines(lines, meta) {
           const t = { tool: item.name };
           const s = compactToolInput(item.name, item.input);
           if (s !== undefined) t.arg = s;
+          // 큰 tool_result 가 나중에 이 id 로 자기 원인(도구·대상)을 찾을 수 있게 기록한다.
+          if (item.id) toolUseById.set(item.id, { tool: item.name, target: s });
           if (ev.attributionAgent) {
             t.by = ev.attributionAgent;
             bumpAgent(agentMetrics, ev.attributionAgent).tool_calls += 1;
@@ -175,8 +193,15 @@ export function distillLines(lines, meta) {
             signals.positive_input.push({ markers: pos, text: truncate(c, ERR_LIMIT) });
           }
           timeline.push(entryIn);
+          // 대용량 유저 입력(예: API 응답 붙여넣기)도 컨텍스트 급상승 원인이다. tool_result 와
+          // 달리 사용자는 이 유입을 알기 어려우므로 잡아 라벨링한다 — 내용은 싣지 않고 길이만.
+          if (c.length >= USER_INPUT_SPIKE_MIN) {
+            pushSpike({ len: c.length, turn_index: assistantTurns, turn: assistantTurns + 1, tool: "user_input" });
+          }
         }
       } else if (Array.isArray(c)) {
+        // 배열 프롬프트의 사용자 text 블록 총량(tool_result 는 아래에서 따로 본다).
+        let userTextLen = 0;
         for (const item of c) {
           if (item.type === "tool_result" && item.is_error) {
             if (ev.attributionAgent) bumpAgent(agentMetrics, ev.attributionAgent).errors += 1;
@@ -185,6 +210,10 @@ export function distillLines(lines, meta) {
                 ? item.content
                 : JSON.stringify(item.content);
             timeline.push({ error: true, message: truncate(body, ERR_LIMIT) });
+          }
+          // 사용자가 직접 넣은 text 블록 — tool_result 와 별개로 유입 총량을 센다.
+          else if (item.type === "text" && typeof item.text === "string") {
+            userTextLen += item.text.length;
           }
           // 성공 tool_result의 장문 stdout·파일 덤프는 버린다(길이 신호만 남길 수도 있음).
           else if (item.type === "tool_result" && typeof item.content === "string") {
@@ -197,17 +226,23 @@ export function distillLines(lines, meta) {
               // "먼저 나온 10개"가 아니라 후보를 모아(버퍼 상한 초과 시 len 최소를 evict)
               // 크기 상위를 유지하고, 최종 순위는 finalizeResultSpikes 가 재청구 비용으로 정한다.
               if (len >= RESULT_SPIKE_MIN) {
-                resultSpikeCandidates.push({ len, turn_index: assistantTurns });
-                if (resultSpikeCandidates.length > MAX_SPIKE_CANDIDATES) {
-                  let minIdx = 0;
-                  for (let k = 1; k < resultSpikeCandidates.length; k++) {
-                    if (resultSpikeCandidates[k].len < resultSpikeCandidates[minIdx].len) minIdx = k;
-                  }
-                  resultSpikeCandidates.splice(minIdx, 1);
-                }
+                // 원인 귀속: 이 tool_result 를 만든 tool_use 의 도구·대상. 컨텍스트 급상승은
+                // 다음 assistant 턴부터 cache_read 로 나타나므로 jump 턴은 assistantTurns+1.
+                const cause = item.tool_use_id ? toolUseById.get(item.tool_use_id) : undefined;
+                pushSpike({
+                  len,
+                  turn_index: assistantTurns,
+                  turn: assistantTurns + 1,
+                  tool: cause ? cause.tool : undefined,
+                  target: cause ? cause.target : undefined,
+                });
               }
             }
           }
+        }
+        // 배열 프롬프트의 사용자 text 총량이 크면 대용량 유저 입력으로 잡는다(내용은 싣지 않음).
+        if (userTextLen >= USER_INPUT_SPIKE_MIN) {
+          pushSpike({ len: userTextLen, turn_index: assistantTurns, turn: assistantTurns + 1, tool: "user_input" });
         }
       }
     }

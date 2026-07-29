@@ -47,3 +47,19 @@ test("빈 입력·총 턴 0 에도 안전하다", () => {
   assert.equal(s.turns_resident, 0);
   assert.equal(s.rebilled_tokens, 0);
 });
+
+test("원인 라벨(turn/tool/target)은 있으면 전파, 없으면 생략한다", () => {
+  const [withCause] = finalizeResultSpikes(
+    [{ len: 8000, turn_index: 2, turn: 3, tool: "Read", target: "foo.tsx" }],
+    52,
+  );
+  assert.equal(withCause.turn, 3);
+  assert.equal(withCause.tool, "Read");
+  assert.equal(withCause.target, "foo.tsx");
+
+  // 원인 미매칭 후보는 라벨 키 자체가 없어야 한다(구버전·비스파이크 tool_result 하위호환).
+  const [without] = finalizeResultSpikes([{ len: 8000, turn_index: 2 }], 52);
+  assert.equal("turn" in without, false);
+  assert.equal("tool" in without, false);
+  assert.equal("target" in without, false);
+});

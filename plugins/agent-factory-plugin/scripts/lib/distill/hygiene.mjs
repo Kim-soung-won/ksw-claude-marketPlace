@@ -41,17 +41,23 @@ const CHARS_PER_TOKEN = 4;
  * boolean(delta_shrank)만 알고 compact 지점의 턴 인덱스를 몰라 "중간 compact 무시"로
  * 근사한다. 정밀 계산은 후속 과제.
  *
- * @param {Array<{len:number, turn_index:number}>} candidates 결과 크기와 생성 시점 턴 인덱스
+ * @param {Array<{len:number, turn_index:number, turn?:number, tool?:string, target?:string}>} candidates
+ *   결과 크기와 생성 시점 턴 인덱스, (있으면) 급상승 턴·원인 도구·대상.
  * @param {number} totalAssistantTurns 델타 내 총 assistant 턴 수
- * @returns {Array<{len:number, turns_resident:number, rebilled_tokens:number}>}
- *   재청구 추정 토큰 내림차순 상위 MAX_RESULT_SPIKES 개.
+ * @returns {Array<{len:number, turns_resident:number, rebilled_tokens:number, turn?:number, tool?:string, target?:string}>}
+ *   재청구 추정 토큰 내림차순 상위 MAX_RESULT_SPIKES 개. turn/tool/target 은 원인 라벨(있을 때만).
  */
 export function finalizeResultSpikes(candidates, totalAssistantTurns) {
   const total = typeof totalAssistantTurns === "number" ? totalAssistantTurns : 0;
   const scored = (candidates || []).map((c) => {
     const turnsResident = Math.max(0, total - c.turn_index);
     const rebilledTokens = Math.round((c.len / CHARS_PER_TOKEN) * turnsResident);
-    return { len: c.len, turns_resident: turnsResident, rebilled_tokens: rebilledTokens };
+    const out = { len: c.len, turns_resident: turnsResident, rebilled_tokens: rebilledTokens };
+    // 원인 라벨은 있을 때만 싣는다(구버전·미매칭 후보와 하위호환).
+    if (typeof c.turn === "number") out.turn = c.turn;
+    if (c.tool) out.tool = c.tool;
+    if (c.target) out.target = c.target;
+    return out;
   });
   // 재청구 추정 비용 내림차순. 동률이면 일회성 크기(len) 큰 것을 앞에 둔다.
   scored.sort((a, b) => b.rebilled_tokens - a.rebilled_tokens || b.len - a.len);
