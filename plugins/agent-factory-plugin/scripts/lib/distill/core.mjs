@@ -82,6 +82,9 @@ export function distillLines(lines, meta) {
   let maxTurnContext = 0;
   let prevTurnCtx = null;
   let maxTurnContextJump = 0;
+  // 턴별 컨텍스트 크기 시계열 `[turnIndex, ctx]`(다운샘플 없이 전량). 컨텍스트가 언제
+  // 부풀었는지(초과 비용 시점)를 그대로 담아 상세화면 스파크라인의 입력이 된다.
+  const contextSeries = [];
   let maxResultLen = 0;
   // assistant 턴 카운터 — tool_result 의 "생성 시점 턴 인덱스"로 쓰이며, 잔류 턴 수 계산의 기준.
   let assistantTurns = 0;
@@ -121,6 +124,7 @@ export function distillLines(lines, meta) {
         (msg.usage?.input_tokens || 0) + (msg.usage?.cache_read_input_tokens || 0);
       if (turnCtx > 0) {
         lastTurnCtx = turnCtx;
+        contextSeries.push([assistantTurns, turnCtx]);
         if (turnCtx > maxTurnContext) maxTurnContext = turnCtx;
         if (prevTurnCtx !== null) {
           const jump = turnCtx - prevTurnCtx;
@@ -301,6 +305,7 @@ export function distillLines(lines, meta) {
       totalAssistantTurns: assistantTurns,
       maxTurnContext,
       maxTurnContextJump,
+      contextSeries,
     }),
     // 이 커밋 시점 컨텍스트 크기 샘플(세션 누적 스코프의 회귀 입력). 턴이 없으면 null.
     context_size_sample: lastTurnCtx,

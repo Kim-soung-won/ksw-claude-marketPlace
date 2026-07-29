@@ -86,6 +86,9 @@ feedback-rubric.md의 축별로, digest에서 실제로 근거가 있는 항목�
 - `hygiene_delta.cr_gen_ratio`가 크면 재청구되는 컨텍스트 세(稅)가 크다는 신호이나, 비율
   자체는 병이 아니다 — 캐싱은 완화제다. 세션 길이·기울기와 **함께** 볼 때만 낭비로 읽는다.
 - `delta_shrank`가 true 면 이 커밋 델타에서 compact/clear(세션 리셋)가 있었다는 뜻이다.
+- `hygiene_delta.context_series`(턴별 컨텍스트 시계열)와 `assistant_turns`는 **UI 스파크라인·
+  공식용 기계 데이터**다. 배열을 `.md` 요약에 나열하지 않는다 — 필요하면 "컨텍스트가 N턴에서
+  급증" 같은 해석만 서술한다.
 ```
 
 ## 작성 규칙

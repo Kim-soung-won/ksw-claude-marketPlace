@@ -21,6 +21,7 @@ import {
   writeJson,
 } from "../../../lib/factory-home.mjs";
 import {
+  MAX_CONTEXT_SERIES,
   MAX_HYGIENE_SAMPLES,
   MAX_HYGIENE_SESSIONS,
   MAX_RESULT_SPIKES,
@@ -58,6 +59,21 @@ export function finalizeResultSpikes(candidates, totalAssistantTurns) {
 }
 
 /**
+ * 턴별 컨텍스트 시계열을 방어적 상한 안에서 마감한다(순수·결정론).
+ *
+ * 다운샘플하지 않고 전량 보존한다 — "컨텍스트가 언제 부풀었는가"(초과 비용 시점)를
+ * 그대로 드러내는 것이 목적이라 형태를 뭉개지 않는다. 다만 폭주 세션이 한 커밋에 통째로
+ * 잡히는 극단만 유계화한다: 상한 초과 시 초반 턴부터 유지해 누적 스토리(램프)를 지킨다.
+ *
+ * @param {Array<[number, number]>} series `[turnIndex, ctx]` 쌍(생성 순서).
+ * @returns {Array<[number, number]>} 상한 이내로 자른 시계열.
+ */
+export function finalizeContextSeries(series) {
+  const s = Array.isArray(series) ? series : [];
+  return s.length > MAX_CONTEXT_SERIES ? s.slice(0, MAX_CONTEXT_SERIES) : s;
+}
+
+/**
  * 델타 스코프 위생 지표를 평탄 객체로 만든다(결정론적).
  * distillLines 가 한 번의 순회에서 모은 원시값을 그대로 받는다.
  *
@@ -66,9 +82,10 @@ export function finalizeResultSpikes(candidates, totalAssistantTurns) {
  * @param {number} p.maxResultLen  델타 내 최대 tool_result 길이(출력 급증)
  * @param {Array<{len:number, turn_index:number}>} p.resultSpikeCandidates
  *   임계 초과 tool_result 후보(생성 시점 턴 인덱스 포함). finalizeResultSpikes 로 마감한다.
- * @param {number} p.totalAssistantTurns  델타 내 총 assistant 턴 수(잔류 턴 계산 기준)
+ * @param {number} p.totalAssistantTurns  델타 내 총 assistant 턴 수(잔류 턴 계산 기준·API 호출 수)
  * @param {number} p.maxTurnContext  델타 내 최대 턴 컨텍스트(input+cache_read)
  * @param {number} p.maxTurnContextJump  인접 턴 컨텍스트 최대 증가폭(단일 턴 급증)
+ * @param {Array<[number, number]>} p.contextSeries  턴별 컨텍스트 시계열 `[turnIndex, ctx]`
  * @returns {object} 사이드카에 실을 델타 스코프 위생 지표
  */
 export function computeDeltaHygiene({
@@ -78,6 +95,7 @@ export function computeDeltaHygiene({
   totalAssistantTurns,
   maxTurnContext,
   maxTurnContextJump,
+  contextSeries,
 }) {
   // cache_creation 이 0 이면 비율이 정의되지 않는다(0 나눗셈) → null 로 명시한다.
   const crGenRatio =
@@ -90,6 +108,9 @@ export function computeDeltaHygiene({
     tool_result_spikes: finalizeResultSpikes(resultSpikeCandidates, totalAssistantTurns),
     max_turn_context: maxTurnContext || 0,
     max_turn_context_jump: maxTurnContextJump || 0,
+    // 턴별 컨텍스트 시계열(전량) + 총 assistant 턴 수. "avg ctx × calls" 공식과 스파크라인의 입력.
+    context_series: finalizeContextSeries(contextSeries),
+    assistant_turns: typeof totalAssistantTurns === "number" ? totalAssistantTurns : 0,
   };
 }
 

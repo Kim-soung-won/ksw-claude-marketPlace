@@ -34,6 +34,8 @@
     "tool_result_spikes":    [{ "len": 8000, "turns_resident": 50, "rebilled_tokens": 100000 }], // {len,turns_resident,rebilled_tokens}[]  (rebilled_tokens 내림차순 상위 MAX_RESULT_SPIKES=10)
     "max_turn_context":      36000,           // int   — 턴 컨텍스트(input+cache_read) 최댓값
     "max_turn_context_jump": 29500,           // int   — 인접 턴 컨텍스트 최대 증가폭(단일 턴 급증)
+    "context_series":        [[1, 12000], [2, 24000], [3, 36000]], // [turnIndex, ctx][] — 턴별 컨텍스트 시계열(전량, 방어 상한 MAX_CONTEXT_SERIES=5000)
+    "assistant_turns":       3,               // int   — 델타 내 총 assistant 턴 수(= API 호출 수)
 
     // ── 델타 스코프 (리셋 사실) ──
     "delta_shrank":          false,           // bool  — 이 커밋 델타에서 compact/clear 발생
@@ -54,6 +56,7 @@
 | `cache_read`·`cache_creation`·`cr_gen_ratio` | digest.hygiene_delta | 델타 스코프 |
 | `max_tool_result_len`·`tool_result_spikes` | digest.hygiene_delta | 출력 급증 |
 | `max_turn_context`·`max_turn_context_jump` | digest.hygiene_delta | 컨텍스트 급증 |
+| `context_series`·`assistant_turns` | digest.hygiene_delta | 턴별 컨텍스트 시계열(전량)·API 호출 수 — 상세화면 "왜 M 단위인가" 스파크라인·공식 |
 | `delta_shrank`·`context_size_sample` | digest | 리셋 사실·크기 샘플 |
 | `session_resets`·`context_slope`·`context_samples` | **사이드카 전용** | `hygiene.mjs`가 커밋 간 증분 복원. digest(=요약 .md)에는 없다 |
 
@@ -85,6 +88,7 @@
 - `MAX_HYGIENE_SAMPLES=200` — 세션당 유지 컨텍스트 샘플 수(초과 시 오래된 앞부분 프루닝, `resets`는 별도 보존).
 - `MAX_HYGIENE_SESSIONS=500` — `session-hygiene.json`이 담을 세션 수(초과 시 `updated_at` 오래된 세션부터 프루닝).
 - `MAX_RESULT_SPIKES=10` — 델타당 `tool_result_spikes` 최종 목록 상한(재청구 비용 상위 N개).
+- `MAX_CONTEXT_SERIES=5000` — `context_series` 포인트 수 방어 상한(다운샘플 없이 전량 저장하되 폭주 델타만 유계화, 초과 시 초반 턴부터 유지).
 - `RESULT_SPIKE_MIN=2000` — 스파이크로 볼 최소 tool_result 길이(글자). timeline 문턱(STDOUT_HEAD*4=480)과 분리해 상향한 값.
 - `MAX_SPIKE_CANDIDATES=200` — 순회 중 잔류 턴 확정 전까지 모으는 후보 버퍼 상한(len 최소부터 evict).
 
