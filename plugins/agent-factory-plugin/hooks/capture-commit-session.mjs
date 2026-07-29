@@ -66,11 +66,13 @@ import {
 const COMMIT_RECENCY_WINDOW_SEC = 300;
 
 // 트리거 명령이 실제 git commit 실행인지 판정한다. 복합 명령(`git add . && git commit …`)도
-// 매칭되도록 명령 시작·구분자(;·&·|) 뒤의 `git commit` 을 본다. subcommand 앞의 전역 옵션
+// 매칭되도록 명령 시작·구분자(;·&·|·개행) 뒤의 `git commit` 을 본다. 개행을 넣는 이유: 여러 줄
+// 스크립트(`cd …\ngit add .\ngit commit …`)에서 git commit 이 줄 맨 앞에 오는 경우가 흔한데,
+// 개행을 구분자로 보지 않으면 이런 커밋이 통째로 누락된다. subcommand 앞의 전역 옵션
 // (`git -C <path> commit`, `git -c k=v commit`, `git --git-dir=… commit`)도 커밋으로 인정한다 —
 // 다른 레포를 겨냥한 `git -C <repo> commit` 이 가드3 에서 비-커밋으로 오분류돼 누락되지 않도록.
 const GIT_COMMIT_RE =
-  /(^|[;&|]\s*)git\s+(?:-C\s+\S+\s+|-c\s+\S+\s+|--\S+\s+|-\w+\s+)*commit\b/;
+  /(^|[;&|\n]\s*)git\s+(?:-C\s+\S+\s+|-c\s+\S+\s+|--\S+\s+|-\w+\s+)*commit\b/;
 
 // 같은 HEAD 를 의도적으로 다시 캡처하고 싶을 때의 탈출구. 중복 가드(가드1·가드1b)만
 // 우회하며, 가드2·가드3(진짜 커밋인지 검증)은 우회하지 않는다 — 유령 커밋 방지는
