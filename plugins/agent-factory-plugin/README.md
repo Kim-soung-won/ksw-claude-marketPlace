@@ -12,6 +12,7 @@ git commit (Claude가 실행)
         · 훅 입력의 transcript_path로 세션 JSONL 특정, 커밋 sha 기록
         · 직전 커밋 워터마크와의 델타 구간을 큐에 적재 (git_root를 항목에 포함)
         · 커밋 간 중복 오염 없음 (세션이 아니라 "직전 커밋 이후 ~ 이번 커밋"이 단위)
+        · 이미 다른 세션이 캡처한 HEAD는 다시 적재하지 않는다 (레포 스코프 커서)
   ↓  (온디맨드 — "세션 피드백 정리해줘")
 session-feedback-summarizer 에이전트
   1) scripts/distill-session.mjs --drain --dir <gitRoot>   ← 결정론적 전처리(토큰 절감 지점)
@@ -50,7 +51,7 @@ Observer 서버 → Postgres → 대시보드
 | 파일 | 성격 |
 |------|------|
 | `config.json` | 서버 접속 설정 (**토큰 포함** — `chmod 600` 권장) |
-| `cursors.json` | 세션별 워터마크 |
+| `cursors.json` | 세션별 워터마크(offset·uuid·마지막 커밋) + `repos` 예약 키의 레포별 마지막 캡처 커밋 |
 | `queue.jsonl` | 미처리 델타 큐 (항목마다 `git_root`) |
 | `processed.jsonl` | 처리 완료 로그 |
 | `state.json` | 업로드 완료 해시 (`<repoPath>::<fileName>` 키) |
@@ -98,6 +99,13 @@ chmod 600 ~/.agent-factory/config.json
 자동 마이그레이션은 하지 않는다(새 기록부터 새 위치에 쌓인다). 워터마크·업로드 상태가
 초기화되더라도 다음 커밋이 좀 더 큰 델타를 잡거나 서버가 내용 해시로 `unchanged` 처리해
 자연히 수렴한다.
+
+0.11.0 미만에서 올라오면 `cursors.json` 에 `repos` 키가 없다. 마이그레이션 작업은 필요
+없고 레포별 첫 캡처 때 자동 생성되지만, **그 첫 커밋 1건에 한해 세션 간 중복이 아직
+발생할 수 있다**(비교할 레포 커서가 아직 없기 때문).
+
+같은 HEAD 를 의도적으로 다시 캡처해야 하면 `AGENT_FACTORY_FORCE_CAPTURE=1` 을 주면
+중복 가드만 우회한다(진짜 커밋인지 검증하는 가드는 우회되지 않는다).
 
 ## 사용
 
