@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 /**
- * capture-commit-session — 경량 커밋 캡처 hook (PostToolUse @ Bash(git commit *)).
+ * capture-commit-session — 경량 커밋 캡처 hook (PostToolUse @ matcher "Bash", if "Bash(git *commit*)").
+ *
+ * hooks.json 의 `if` 는 `Bash(git *commit*)` 로 건다 — 훅이 "커밋할 때만" 도는 의도를
+ * 명확히 하면서 `git -C <repo> commit`·`git -c k=v commit` 처럼 subcommand 앞에 옵션이
+ * 낀 형태도 잡는다. 예전 `Bash(git commit *)` 는 접두 매칭이라 `git -C … commit` 을 못 잡아
+ * 커밋을 통째로 누락시켰다. `if` 로 후보를 커밋 계열로 좁힌 뒤, 그 안에서 아래
+ * GIT_COMMIT_RE(가드3)가 진짜 git commit 만 최종적으로 걸러낸다. `if` 가 못 잡는 잔여
+ * 형태(첫 토큰이 git 이 아닌 순수 개행 스크립트 `cd\ngit add\ngit commit`)는 &&-체인·
+ * 단독 커밋으로 커밋하면 피한다.
  *
  * 무조건 실행되는 hook이므로 규칙은 단 하나다: **가볍고, 절대 커밋을 막지 않는다.**
  * LLM을 부르지 않고, 세션 JSONL도 통째로 읽지 않는다. 하는 일은:
