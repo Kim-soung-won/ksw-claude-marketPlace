@@ -17,11 +17,16 @@ export const MAX_HYGIENE_SAMPLES = 200;
 // session-hygiene.json 이 담을 세션 수 상한. 초과 시 updated_at 이 오래된 세션부터
 // 버려 파일 무한성장을 막는다(현재 세션은 방금 갱신돼 최신이라 살아남는다).
 export const MAX_HYGIENE_SESSIONS = 500;
-// 델타당 기록할 result_len 스파이크 목록 상한.
+// 최종 tool_result 스파이크 목록 상한(재청구 추정 비용 상위 N개).
 export const MAX_RESULT_SPIKES = 10;
-// 스파이크로 볼 최소 tool_result 길이. core.mjs 가 result_len 항목을 timeline 에 남기는
-// 임계(STDOUT_HEAD * 4)와 정합한다.
-export const RESULT_SPIKE_MIN = STDOUT_HEAD * 4;
+// 스파이크로 볼 최소 tool_result 길이(글자). 더 이상 timeline result_len 문턱
+// (STDOUT_HEAD * 4 = 480자)과 동일하지 않다 — 480자(~120토큰)는 몇 줄짜리 출력이면
+// 다 걸려 신호가 약했다. 의미 있는 크기로 상향한다. RESULT_SPIKE_MIN > STDOUT_HEAD*4
+// 이어야 core 의 outer timeline gate(len > 480) 안에서 자연히 상위 게이팅된다.
+export const RESULT_SPIKE_MIN = 2000;
+// 순회 중 잔류 턴 확정 전까지 모으는 스파이크 후보 버퍼 상한(메모리 유계화).
+// 순회가 끝나야 turns_resident 를 알 수 있어 후보를 잠시 쌓는다 — len 하위부터 evict 한다.
+export const MAX_SPIKE_CANDIDATES = 200;
 
 // 감정 신호 어휘 사전(확장 가능). 결정론적 감지라 LLM이 놓치지 않는다.
 // 부정 신호는 assistant "출력"에서, 긍정 신호는 user "입력"에서만 찾는다.

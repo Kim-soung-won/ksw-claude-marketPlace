@@ -78,7 +78,11 @@ feedback-rubric.md의 축별로, digest에서 실제로 근거가 있는 항목�
 
 - `hygiene_delta.max_turn_context_jump`가 크면 **단일 턴 대용량 덤프**(대용량 Read 등을
   컨텍스트에 끌어들여 이후 턴마다 재청구)를 의심하고 timeline 에서 그 지점을 짚는다.
-- `hygiene_delta.tool_result_spikes`는 재청구를 유발한 tool_result 길이 목록이다.
+- `hygiene_delta.tool_result_spikes`는 큰 tool_result 가 컨텍스트에 잔류하며 재청구된
+  추정 비용 목록이다. 각 항목은 `len`(일회성 크기)·`turns_resident`(잔류 턴)·
+  `rebilled_tokens`(재청구 추정 토큰 = 글자÷4 × 잔류 턴)이며, 크기가 아니라 재청구 비용
+  내림차순 상위다. 서술할 때 "큰 결과를 읽었다"가 아니라 "그 결과가 몇 턴 얹혀 얼마를
+  재청구했다"로 잔류 비용 관점에서 짚는다.
 - `hygiene_delta.cr_gen_ratio`가 크면 재청구되는 컨텍스트 세(稅)가 크다는 신호이나, 비율
   자체는 병이 아니다 — 캐싱은 완화제다. 세션 길이·기울기와 **함께** 볼 때만 낭비로 읽는다.
 - `delta_shrank`가 true 면 이 커밋 델타에서 compact/clear(세션 리셋)가 있었다는 뜻이다.

@@ -20,7 +20,42 @@ import {
   readJson,
   writeJson,
 } from "../../../lib/factory-home.mjs";
-import { MAX_HYGIENE_SAMPLES, MAX_HYGIENE_SESSIONS } from "./constants.mjs";
+import {
+  MAX_HYGIENE_SAMPLES,
+  MAX_HYGIENE_SESSIONS,
+  MAX_RESULT_SPIKES,
+} from "./constants.mjs";
+
+// 글자→토큰 대략 환산(영문·코드 기준 경험값). 재청구 비용 추정용 근사다.
+const CHARS_PER_TOKEN = 4;
+
+/**
+ * 스파이크 후보를 "재청구 추정 비용" 기준으로 마감한다(순수·결정론).
+ *
+ * 한 tool_result 는 생성된 턴 이후 델타가 끝날 때까지 컨텍스트에 남아 매 assistant
+ * 턴마다 cache_read 로 재청구된다. 그 총량을 (글자→토큰) × 잔류 턴으로 추정한다.
+ *
+ * 근사 한계: (1) 글자÷4 토큰 환산은 정밀치가 아니다. (2) 델타 내부에서 compact/clear 가
+ * 일어나면 그 이전 결과는 실제로는 이후 재청구되지 않지만, core 단일 순회는 델타 단위
+ * boolean(delta_shrank)만 알고 compact 지점의 턴 인덱스를 몰라 "중간 compact 무시"로
+ * 근사한다. 정밀 계산은 후속 과제.
+ *
+ * @param {Array<{len:number, turn_index:number}>} candidates 결과 크기와 생성 시점 턴 인덱스
+ * @param {number} totalAssistantTurns 델타 내 총 assistant 턴 수
+ * @returns {Array<{len:number, turns_resident:number, rebilled_tokens:number}>}
+ *   재청구 추정 토큰 내림차순 상위 MAX_RESULT_SPIKES 개.
+ */
+export function finalizeResultSpikes(candidates, totalAssistantTurns) {
+  const total = typeof totalAssistantTurns === "number" ? totalAssistantTurns : 0;
+  const scored = (candidates || []).map((c) => {
+    const turnsResident = Math.max(0, total - c.turn_index);
+    const rebilledTokens = Math.round((c.len / CHARS_PER_TOKEN) * turnsResident);
+    return { len: c.len, turns_resident: turnsResident, rebilled_tokens: rebilledTokens };
+  });
+  // 재청구 추정 비용 내림차순. 동률이면 일회성 크기(len) 큰 것을 앞에 둔다.
+  scored.sort((a, b) => b.rebilled_tokens - a.rebilled_tokens || b.len - a.len);
+  return scored.slice(0, MAX_RESULT_SPIKES);
+}
 
 /**
  * 델타 스코프 위생 지표를 평탄 객체로 만든다(결정론적).
@@ -29,7 +64,9 @@ import { MAX_HYGIENE_SAMPLES, MAX_HYGIENE_SESSIONS } from "./constants.mjs";
  * @param {object} p
  * @param {{cache_read:number, cache_creation:number}} p.totals 델타 전체 토큰 합계
  * @param {number} p.maxResultLen  델타 내 최대 tool_result 길이(출력 급증)
- * @param {Array<{len:number}>} p.resultSpikes  임계 초과 result_len 목록(상한까지)
+ * @param {Array<{len:number, turn_index:number}>} p.resultSpikeCandidates
+ *   임계 초과 tool_result 후보(생성 시점 턴 인덱스 포함). finalizeResultSpikes 로 마감한다.
+ * @param {number} p.totalAssistantTurns  델타 내 총 assistant 턴 수(잔류 턴 계산 기준)
  * @param {number} p.maxTurnContext  델타 내 최대 턴 컨텍스트(input+cache_read)
  * @param {number} p.maxTurnContextJump  인접 턴 컨텍스트 최대 증가폭(단일 턴 급증)
  * @returns {object} 사이드카에 실을 델타 스코프 위생 지표
@@ -37,7 +74,8 @@ import { MAX_HYGIENE_SAMPLES, MAX_HYGIENE_SESSIONS } from "./constants.mjs";
 export function computeDeltaHygiene({
   totals,
   maxResultLen,
-  resultSpikes,
+  resultSpikeCandidates,
+  totalAssistantTurns,
   maxTurnContext,
   maxTurnContextJump,
 }) {
@@ -49,7 +87,7 @@ export function computeDeltaHygiene({
     cache_creation: totals ? totals.cache_creation : 0,
     cr_gen_ratio: crGenRatio,
     max_tool_result_len: maxResultLen || 0,
-    tool_result_spikes: resultSpikes || [],
+    tool_result_spikes: finalizeResultSpikes(resultSpikeCandidates, totalAssistantTurns),
     max_turn_context: maxTurnContext || 0,
     max_turn_context_jump: maxTurnContextJump || 0,
   };

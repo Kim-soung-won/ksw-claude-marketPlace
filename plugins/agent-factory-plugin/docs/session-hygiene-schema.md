@@ -31,7 +31,7 @@
     "cache_creation":        1100,            // int
     "cr_gen_ratio":          41.8,            // float | null  (cache_creation=0 → null)
     "max_tool_result_len":   2000,            // int   — 델타 내 최대 tool_result 길이
-    "tool_result_spikes":    [{ "len": 2000 }], // {len:int}[]  (최대 MAX_RESULT_SPIKES=10)
+    "tool_result_spikes":    [{ "len": 8000, "turns_resident": 50, "rebilled_tokens": 100000 }], // {len,turns_resident,rebilled_tokens}[]  (rebilled_tokens 내림차순 상위 MAX_RESULT_SPIKES=10)
     "max_turn_context":      36000,           // int   — 턴 컨텍스트(input+cache_read) 최댓값
     "max_turn_context_jump": 29500,           // int   — 인접 턴 컨텍스트 최대 증가폭(단일 턴 급증)
 
@@ -74,7 +74,7 @@
 | 리셋 없는 단조 누적 | `context_slope` 큼 **+** `session_resets` 0 | **가장 강한 안티패턴** — 작업 경계에서 `/clear` 부재 |
 | 단일 턴 대용량 덤프 | `max_turn_context_jump` 큼 | 대용량 Read 등을 컨텍스트에 들여 이후 턴마다 재청구 |
 | 컨텍스트 세(稅) 과다 | `cr_gen_ratio` 큼 | 단독 판정 금지 — 세션 길이·기울기와 **함께** 볼 때만 낭비 |
-| 재청구 유발 출력 | `tool_result_spikes` | 어떤 tool_result 가 이후 턴 내내 재청구됐는지 |
+| 재청구 유발 출력 | `tool_result_spikes` | 큰 tool_result 가 컨텍스트에 잔류하며 재청구된 추정 비용(`rebilled_tokens` = 글자÷4 × `turns_resident`). 크기가 아니라 이 비용 내림차순 상위 목록 |
 
 > `cr_gen_ratio`만으로 "낭비"를 판정하지 말 것. 캐싱이 없었다면 비용이 10배였다 — 높은
 > 비율은 긴 세션의 자연스러운 결과이지 병의 증거가 아니다. 병은 **누적 + 리셋 부재**다.
@@ -84,5 +84,10 @@
 `scripts/lib/distill/constants.mjs`:
 - `MAX_HYGIENE_SAMPLES=200` — 세션당 유지 컨텍스트 샘플 수(초과 시 오래된 앞부분 프루닝, `resets`는 별도 보존).
 - `MAX_HYGIENE_SESSIONS=500` — `session-hygiene.json`이 담을 세션 수(초과 시 `updated_at` 오래된 세션부터 프루닝).
-- `MAX_RESULT_SPIKES=10` — 델타당 `tool_result_spikes` 목록 상한.
-- `RESULT_SPIKE_MIN=STDOUT_HEAD*4` — 스파이크로 볼 최소 tool_result 길이.
+- `MAX_RESULT_SPIKES=10` — 델타당 `tool_result_spikes` 최종 목록 상한(재청구 비용 상위 N개).
+- `RESULT_SPIKE_MIN=2000` — 스파이크로 볼 최소 tool_result 길이(글자). timeline 문턱(STDOUT_HEAD*4=480)과 분리해 상향한 값.
+- `MAX_SPIKE_CANDIDATES=200` — 순회 중 잔류 턴 확정 전까지 모으는 후보 버퍼 상한(len 최소부터 evict).
+
+> `rebilled_tokens`는 추정치다: 글자÷4 토큰 환산 × 델타 내 잔류 턴. 델타 내부에서
+> compact/clear 가 일어난 경우 그 이전 결과는 실제로는 이후 재청구되지 않지만, 단일
+> 순회는 compact 지점의 턴 인덱스를 몰라 "중간 compact 무시"로 근사한다.

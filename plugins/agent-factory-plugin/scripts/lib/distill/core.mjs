@@ -19,7 +19,7 @@ import {
   ERR_LIMIT,
   STDOUT_HEAD,
   RESULT_SPIKE_MIN,
-  MAX_RESULT_SPIKES,
+  MAX_SPIKE_CANDIDATES,
   NEGATIVE_OUTPUT_MARKERS,
   POSITIVE_INPUT_MARKERS,
 } from "./constants.mjs";
@@ -75,14 +75,17 @@ export function distillLines(lines, meta) {
   const signals = { negative_output: [], positive_input: [] };
   // 세션 위생(델타 스코프) 신호. lastTurnCtx = 마지막 assistant 턴의 컨텍스트 크기
   // (input+cache_read) = 이 커밋 시점 컨텍스트 크기 샘플. maxTurnContextJump = 인접 턴
-  // 컨텍스트 최대 증가폭(대용량 read 등 단일 턴 급증). maxResultLen/resultSpikes =
-  // tool_result 출력 급증.
+  // 컨텍스트 최대 증가폭(대용량 read 등 단일 턴 급증). maxResultLen = 최대 tool_result
+  // 길이. resultSpikeCandidates = 임계 초과 tool_result 후보(생성 시점 턴 인덱스 포함) —
+  // 순회 종료 후 finalizeResultSpikes 가 "재청구 추정 비용(크기×잔류 턴)" 상위 N개로 마감한다.
   let lastTurnCtx = null;
   let maxTurnContext = 0;
   let prevTurnCtx = null;
   let maxTurnContextJump = 0;
   let maxResultLen = 0;
-  const resultSpikes = [];
+  // assistant 턴 카운터 — tool_result 의 "생성 시점 턴 인덱스"로 쓰이며, 잔류 턴 수 계산의 기준.
+  let assistantTurns = 0;
+  const resultSpikeCandidates = [];
   let events = 0;
   // 이 델타 구간 안에서 spawn 된 Agent tool_use 의 id 집합. meta.toolUseId 와 짝이며,
   // 서브에이전트 사이드카를 이 델타에 결정론적으로 귀속하는 1순위 키다(byte 구간 정합).
@@ -109,6 +112,8 @@ export function distillLines(lines, meta) {
 
     const msg = ev.message;
     if (ev.type === "assistant" && msg) {
+      // 생성 시점 턴 인덱스 기준. usage 유무와 무관하게 assistant 메시지마다 센다.
+      assistantTurns++;
       addUsage(totals, msg.usage);
       // 이 턴의 컨텍스트 크기 = input + cache_read(장부의 재청구 대상). 마지막 값이 이 커밋
       // 시점 컨텍스트 크기 샘플이 되고, 인접 턴 증가폭의 최대가 단일 턴 급증 신호다.
@@ -184,8 +189,18 @@ export function distillLines(lines, meta) {
               timeline.push({ result_len: len, head: truncate(item.content, STDOUT_HEAD) });
               if (len > maxResultLen) maxResultLen = len;
               // 대용량 tool_result(대용량 read 덤프 등) — 이후 턴마다 재청구되는 급증 신호.
-              if (len >= RESULT_SPIKE_MIN && resultSpikes.length < MAX_RESULT_SPIKES) {
-                resultSpikes.push({ len });
+              // 생성 시점 턴 인덱스를 함께 담아 순회 후 잔류 턴·재청구 비용으로 마감한다.
+              // "먼저 나온 10개"가 아니라 후보를 모아(버퍼 상한 초과 시 len 최소를 evict)
+              // 크기 상위를 유지하고, 최종 순위는 finalizeResultSpikes 가 재청구 비용으로 정한다.
+              if (len >= RESULT_SPIKE_MIN) {
+                resultSpikeCandidates.push({ len, turn_index: assistantTurns });
+                if (resultSpikeCandidates.length > MAX_SPIKE_CANDIDATES) {
+                  let minIdx = 0;
+                  for (let k = 1; k < resultSpikeCandidates.length; k++) {
+                    if (resultSpikeCandidates[k].len < resultSpikeCandidates[minIdx].len) minIdx = k;
+                  }
+                  resultSpikeCandidates.splice(minIdx, 1);
+                }
               }
             }
           }
@@ -282,7 +297,8 @@ export function distillLines(lines, meta) {
     hygiene_delta: computeDeltaHygiene({
       totals,
       maxResultLen,
-      resultSpikes,
+      resultSpikeCandidates,
+      totalAssistantTurns: assistantTurns,
       maxTurnContext,
       maxTurnContextJump,
     }),
