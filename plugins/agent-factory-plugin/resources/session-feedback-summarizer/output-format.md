@@ -50,8 +50,13 @@ cost_tokens: { input: <n>, output: <n>, cache_read: <n>, cache_creation: <n> }
 
 | 순서 | 주체 | 도구/에이전트 | 대상 | 비고 |
 |------|------|--------------|------|------|
-| 1 | (main/attributionAgent) | Agent(subagent_type) / Skill / Edit … | 파일·인자 요지 | 에러·재시도 여부 |
+| 1 | (main/attributionAgent) | Agent → subagent_type / Skill → skill-name / Edit … | 파일·인자 요지 | 에러·재시도 여부 |
 
+- **에이전트·스킬·MCP 는 반드시 이름과 함께 적는다** — 소비측이 종류(kind)를 분류하고 집계하려면
+  이름이 필요하다. `Agent → <subagent_type>`, `Skill → <skill-name>`(슬래시 커맨드도 스킬이므로
+  `Skill → <name>`), MCP 는 `mcp__server__tool` 원형 그대로. **맨몸 `Skill`·`Agent` 로 적지 않는다** —
+  이름을 떼면 일반 도구(TOOL)로 뭉개져 스킬·에이전트 집계에서 사라진다. 도구 이름(대상)은
+  timeline tool 항목의 `arg` 에 들어 있다(스킬이면 스킬명).
 - timeline 의 tool 항목에 `repeat:n`이 있으면 **동일 도구·동일 주체(by)의 n회 연속 호출**을
   하나로 접은 것이다. 개별 N행으로 부풀리지 말고 비고에 "n회 연속"으로 표기한다.
 

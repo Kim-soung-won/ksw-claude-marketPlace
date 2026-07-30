@@ -112,6 +112,10 @@ chmod 600 ~/.agent-factory/config.json
 1. 플러그인을 활성화한다. 이후 Claude가 `git commit`을 실행할 때마다 델타가 자동 캡처된다.
 2. 쌓인 세션을 정리하려면 `session-feedback-summarizer`를 호출한다("세션 피드백 정리해줘").
 
+커밋이 캡처되지 않거나 요약이 "처리할 커밋 없음"으로 끝나면
+[`docs/capture-troubleshooting.md`](docs/capture-troubleshooting.md)를 본다 — 게이트
+오분류(복합 `git commit`)·캐시된 옛 훅 버전 진단과, 놓친 커밋을 큐에 수동 백필해 복구하는 절차.
+
 ## 의존
 
 - Node.js (세션 JSONL 파싱·전처리). 대상 레포가 프론트엔드 프로젝트라 통상 이미 있다.
