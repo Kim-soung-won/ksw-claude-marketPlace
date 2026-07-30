@@ -12,6 +12,11 @@ description: >-
   검토해줘", "에이전트들 정의 과한지 검토해줘", "plugins 전체 에이전트 정의 훑어봐" 요청 시
   호출한다. "검토·점검"이라는 단어가 와도 **무게·비용·격리 값어치·실사용** 축이면 이쪽이고,
   frontmatter·스펙 준수 같은 정적 품질 축이면 `subagent-evaluator` 소관이다.
+  <example>
+  Context: 서브에이전트가 토큰을 과하게 쓰는 것 같아 유지 가치를 판정받고 싶어 한다.
+  user: "plugins 전체 에이전트 정의가 과한지, 스킬로 바꿔야 할 게 있는지 봐줘"
+  assistant: subagent-cost-auditor 에이전트를 호출해 실사용 이력과 함께 에이전트별 유지/스킬 전환/삭제 판정을 받겠습니다.
+  </example>
 tools: Read, Grep, Glob, Bash
 model: inherit
 color: yellow

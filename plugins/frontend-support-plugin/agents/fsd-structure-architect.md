@@ -12,6 +12,11 @@ description: >-
   "widgets·entities·features 계층 잡아줘/검토해줘". FSD 특유의 용어(layer·slice·segment,
   app/pages/widgets/features/entities/shared, public API 배럴)가 등장하는 구조 작업이면
   명시적으로 "FSD"라고 말하지 않아도 호출한다.
+  <example>
+  Context: 새 프론트엔드 기능을 추가하며 폴더 구조를 팀 표준대로 잡고 싶어 한다.
+  user: "이 기능 폴더 구조 우리 디자인 패턴대로 잡아줘"
+  assistant: fsd-structure-architect 에이전트를 호출해 FSD 레이어·슬라이스·public API 배럴 규칙에 맞춰 구조를 scaffold하겠습니다.
+  </example>
 tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 color: green

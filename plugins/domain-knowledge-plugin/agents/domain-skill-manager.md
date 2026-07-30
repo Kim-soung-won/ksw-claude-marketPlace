@@ -6,6 +6,11 @@ description: >-
   보완 요청 시 호출한다. 협업자가 Request/Response Body를 공유하며 화면 개발을 요청하면
   명시적 "스킬 만들어줘" 요청이 없어도 선제 호출한다. 공용 컴포넌트 인터페이스(props/타입)를
   문서화하는 component-skill-manager와는 대상이 다르다.
+  <example>
+  Context: 협업 백엔드 개발자가 주문 조회 API의 Request/Response Body를 공유하며 화면 개발을 요청했다.
+  user: "이 주문 조회 API로 목록 화면 만들어줘. 스펙 여기 있어: ..."
+  assistant: 먼저 domain-skill-manager 에이전트를 호출해 이 API 스펙을 도메인 SKILL.md로 기록한 뒤 화면 개발로 넘어가겠습니다.
+  </example>
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 color: purple

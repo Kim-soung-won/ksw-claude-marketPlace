@@ -6,6 +6,11 @@ description: >-
   context: fork, arguments 등)를 검토·수정하는 에이전트. "skill 만들어줘", "SKILL.md
   추가해줘", ".claude/skills에 스킬 추가해줘", "이 플러그인에 skill 추가해줘" 요청 시
   호출한다. 도메인 지식(API 스펙·시나리오·타입)을 기록하는 domain-skill-manager와는 대상이 다르다.
+  <example>
+  Context: 사용자가 반복 작업 절차를 SKILL.md로 만들고 싶어 한다.
+  user: "배포 절차를 skill로 만들어줘"
+  assistant: claude-skill-creator 에이전트를 호출해 공식 규격에 맞는 SKILL.md를 작성하겠습니다.
+  </example>
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
 ---

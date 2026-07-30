@@ -6,6 +6,11 @@ description: >-
   에이전트. "subagent 만들어줘", "커스텀 에이전트 만들어줘", ".claude/agents에 추가해줘",
   "이 플러그인에 agent 추가해줘" 요청이나, subagent의 도구 제한·저장 범위·호출 방식·조합
   패턴(체이닝·병렬·fork) 판단이 필요할 때 호출한다.
+  <example>
+  Context: 사용자가 새 커스텀 서브에이전트 정의를 만들고 싶어 한다.
+  user: "코드 리뷰만 전담하는 subagent 하나 만들어줘"
+  assistant: subagent-creator 에이전트를 호출해 공식 스펙에 맞는 frontmatter와 프롬프트로 새 정의를 작성하겠습니다.
+  </example>
 tools: Read, Write, Edit, Grep, Glob
 model: inherit
 ---

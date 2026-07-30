@@ -7,6 +7,11 @@ description: >-
   (CRITICAL/WARNING/INFO) 리포트만 출력하며, 수정은 domain-skill-manager에 위임한다.
   "도메인 스킬 점검해줘", "스킬 리뷰해줘" 요청이나 리팩토링·API 변경 후, 또는 관련 도메인
   기능 구현 착수 직전에 호출한다.
+  <example>
+  Context: 주문 도메인 API 경로를 리팩토링한 직후라 도메인 스킬이 코드와 어긋났을 수 있다.
+  user: "방금 order API 경로 바꿨는데 도메인 스킬 아직 맞아?"
+  assistant: domain-skill-reviewer 에이전트를 호출해 _api/_domain/_scenario trio와 소스의 경로·타입 불일치를 전수 점검한 리포트를 받겠습니다.
+  </example>
 tools: Read, Grep, Glob, Bash, Agent
 model: sonnet
 color: orange

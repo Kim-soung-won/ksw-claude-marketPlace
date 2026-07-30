@@ -6,6 +6,11 @@ description: >-
   "@we/ai-template의 X 컴포넌트 문서화해줘" 요청이나, 라이브러리 버전업으로 prop·타입이
   바뀐 기존 컴포넌트 스킬을 갱신할 때 호출한다. 협업자에게 받은 도메인 API 스펙·시나리오를
   기록하는 domain-skill-manager와는 대상이 다르다 — API 스펙 요청이면 그쪽을 쓴다.
+  <example>
+  Context: 공용 라이브러리의 특정 컴포넌트를 소스에서 문서화하려 한다.
+  user: "@we/ai-template의 Button 컴포넌트 문서화해줘"
+  assistant: component-skill-manager 에이전트를 호출해 .tsx 소스에서 props·타입·export를 추출한 SKILL.md를 작성하겠습니다.
+  </example>
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 color: cyan

@@ -8,6 +8,11 @@ description: >-
   위임한다. "이 subagent 평가해줘", "agent.md 문제 있어?", "에이전트들 전체 점검해줘" 요청 시 호출한다.
   단, "검토·점검"이라도 **무게·컨텍스트 비용·격리 값어치·실사용** 축(정의가 과한지/무거운지,
   스킬로 바꿔야 하는지)이면 이쪽이 아니라 `subagent-cost-auditor` 소관이다.
+  <example>
+  Context: 기존 subagent 정의가 공식 스펙·모범 사례를 지키는지 진단받고 싶어 한다.
+  user: "이 agent.md 스펙에 문제 없는지 평가해줘"
+  assistant: subagent-evaluator 에이전트를 호출해 CRITICAL/WARNING/SUGGESTION 리포트와 개선 계획을 받겠습니다.
+  </example>
 tools: Read, Grep, Glob, Bash, Agent
 model: inherit
 color: orange

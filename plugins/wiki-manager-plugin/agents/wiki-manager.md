@@ -7,6 +7,11 @@ description: >-
   ("위키링크 없는 노트 찾아줘", "Related Notes 추가해줘", "vault 링크 그래프 점검해줘")
   호출한다. 나중에 다시 찾아볼 가치가 있는 사실을 알게 되면 명시적 요청이 없어도 vault
   캡처를 먼저 제안한다.
+  <example>
+  Context: 작업 중 알아낸 트러블슈팅 사실을 나중에 다시 찾아볼 수 있게 남기고 싶어 한다.
+  user: "방금 그 CORS 프록시 해결 방법 vault에 기록해줘"
+  assistant: wiki-manager 에이전트를 호출해 노트로 캡처하고 관련 노트에 위키링크로 연결하겠습니다.
+  </example>
 tools: Read, Write, Edit, Bash, Grep, Glob, Agent
 model: inherit
 ---
