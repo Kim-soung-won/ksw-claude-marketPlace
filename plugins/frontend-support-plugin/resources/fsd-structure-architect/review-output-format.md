@@ -16,10 +16,10 @@
 {실제 만든 디렉토리·파일 트리}
 
 ### 적용한 FSD 규칙
-- 계층: {나열}
-- 슬라이스: {나열}
-- 세그먼트: {나열}
-- Public API(index.ts): {몇 개 생성}
+- 계층: {나열 — shared/api·entities·features·pages}
+- 슬라이스(그룹/도메인): {나열}
+- 파일 접미사(세그먼트 대체): {나열 — 예: -dto.contracts·.queries·-list.ui·-page.route}
+- Public API(index.ts): {몇 개 생성, 그룹 배럴 포함}
 
 ### 다음 단계 제안
 - {비어 있는 슬라이스에 무엇을 채울지 등}
