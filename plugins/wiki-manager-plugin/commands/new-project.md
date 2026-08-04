@@ -46,17 +46,25 @@ ls -d "<vault>/10 Projects/10."* 2>/dev/null
 
 ## 3. 척추 스캐폴딩 (Overview + Decisions Log만)
 
-`00.04`의 척추 규칙을 따른다. **api/scenario/data-model/timeline/incidents는 만들지 않는다**
-(운영 상세는 SKILL.md, 시간축은 /log, 사건은 INC-NNN에서 파생).
+**포맷은 `_templates`의 프로젝트 템플릿이 단일 진실 공급원이다. 특정 프로젝트 노트(MHub·OCR 등)를
+견본으로 복사하지 않는다.** `00.04`의 척추 규칙을 따르고, api/scenario/data-model/timeline/
+incidents는 만들지 않는다(운영 상세는 SKILL.md, 시간축은 /log, 사건은 INC-NNN에서 파생).
 
-1. `10.NN.00 Project Overview.md` — 수집한 값으로 채운다(빈 placeholder 금지). 섹션:
-   Goal / Background / **정책·제약** / Team / Stack / Scope / Related Notes. frontmatter:
-   `tags: [work/project/<slug>, type/moc, status/seedling]`, `status: active`, 오늘 날짜.
-   운영 레퍼런스가 repo SKILL.md에 있으면 "운영 레퍼런스: repo `<repo>`의 SKILL.md" 한 줄을 남긴다.
-2. `10.NN.01 Decisions Log.md` — 결정 표(`| Date | 결정 내용 | 근거 | 결정자 |`) + `## Escalated to ADR`.
-   정책·제약을 상단 콜아웃 기준선으로 적는다(MHub Decisions Log와 동일한 형식).
-3. **아키타입별 안내만** 남긴다(폴더는 미리 만들지 않음): 도메인형이면 "고유 도메인·불변조건이
-   생기면 `domain/` 추가", 이관형이면 "재사용 패턴은 `30 Resources`로", 소형이면 "이 둘로 충분".
+각 템플릿을 Read해서 `<...>` placeholder를 1단계 수집값으로 치환해 생성한다:
+
+1. `<vault>/_templates/TPL Project Overview.md` → `10 Projects/10.NN <표시명>/10.NN.00 Project Overview.md`
+2. `<vault>/_templates/TPL Project Decisions Log.md` → `10 Projects/10.NN <표시명>/10.NN.01 Decisions Log.md`
+
+**placeholder 치환표:**
+- `<DATE>` = 오늘(YYYY-MM-DD)
+- `<PROJECT_NAME>` = 표시명 · `<SLUG>` = 프로젝트 slug · `<NN.MM>` = 프로젝트 번호(예: `10.03`)
+- `<GOAL>` / `<BACKGROUND>` / `<POLICY>` / `<STACK>` / `<SCOPE>` = 수집값(권장 항목이 미정이면 "미정")
+- `<TEAM_ROWS>` = `| 역할 | 담당 |` 데이터 행들(담당 분담). 미정이면 `| — | 미정 |`
+- `<OPERATIONAL_REF_LINE>` = repo가 있으면 `` - 운영 레퍼런스: repo `<repo>`의 SKILL.md (vault엔 결정·배움만 남긴다) `` , repo가 "없음"이면 이 줄은 삭제
+
+**치환 후 `<...>` placeholder가 하나도 남으면 안 된다**(빈 placeholder 금지). 아키타입별로
+폴더는 미리 만들지 않고, 필요 시 추가하라는 안내만 5단계 보고에 넣는다(도메인형→`domain/` 추가,
+이관형→재사용 패턴은 `30 Resources`, 소형→이 둘로 충분).
 
 ## 4. Project Map · Tag Index 등록
 

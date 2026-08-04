@@ -1,7 +1,7 @@
 {
   "name": "wiki-manager-plugin",
   "description": "Obsidian vault(agent-knowledge-base)의 지식 캡처·결정화 인터페이스. wiki-manager 에이전트(노트 캡처·위키링크)와 /log(대화→Daily Note 캡처층)·/ingest(대화→정식 위키 노트 결정화층)·/new-project(필수 입력 강제 후 프로젝트 스캐폴딩) 커맨드를 제공한다.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": {
     "name": "kimsoungwon"
   }
