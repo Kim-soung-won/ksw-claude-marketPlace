@@ -32,6 +32,12 @@ wiki-manager는 subagent라서 **이 대화 기록을 보지 못한다**(새 컨
    (Tech Learning)으로 진행하되 한 줄로 확인한다. (템플릿·번호 규칙의 상세는 wiki-manager가
    `note-capture.md`에서 처리한다.)
 
+   - **프로젝트 분류**: 세션이 프로젝트 repo에서 열렸다면
+     `${CLAUDE_PLUGIN_ROOT}/resources/wiki-manager/project-classify.md`를 Read해 분류를 얻는다
+     (미등록 repo는 그 절차에 따라 Project Map에 자동 추가됨). 얻은 **프로젝트 태그**를 위임
+     프롬프트에 함께 넘겨 노트 frontmatter에 포함되게 하고, 개요 노트가 있으면 링크 후보로도
+     알린다. 이렇게 하면 결정화된 위키 노트도 `/log` 캡처와 같은 프로젝트 축으로 회수된다.
+
 3. **wiki-manager 에이전트에 위임**: 1에서 추출한 실질 내용을 **위임 프롬프트에 그대로
    담아** wiki-manager 에이전트를 호출한다. wiki-manager는 note-capture 절차로 vault
    컨벤션(템플릿·frontmatter·Tag Index·파일명)에 맞는 노트를 `_inbox/`에 저장하고, 이어서

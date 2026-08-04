@@ -25,28 +25,11 @@ disable-model-invocation: true
 저장 위치는 항상 Daily Note 타임라인이지만, **분류는 세션의 작업 디렉터리로 결정론적으로**
 붙인다. "어디서 `/log`를 쳤느냐"가 곧 프로젝트 분류이므로 매번 수동 태깅할 필요가 없다.
 
-1. **세션 컨텍스트 감지**(현재 작업 디렉터리에서 실행):
-   ```bash
-   ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-   REPO=$(basename "$ROOT" 2>/dev/null)
-   BRANCH=$(git branch --show-current 2>/dev/null)
-   COMMIT=$(git rev-parse --short HEAD 2>/dev/null)
-   REMOTE=$(git remote get-url origin 2>/dev/null)
-   PKG=$(node -p "require('./package.json').name" 2>/dev/null || true)
-   ```
-   git 저장소가 아니면 REPO 등이 빈 값일 수 있다 — 그 경우 미분류로 처리한다(아래 3-b).
-
-2. **Project Map 조회**: `<vault>/00 Meta/00.03 Project Map.md`의 매핑 테이블을 Read/grep해서
-   `REPO`를 `repo` 열과 매칭한다(매칭 우선순위: repo → remote 부분일치 → pkg name).
-   매칭되면 그 행의 **프로젝트 태그**, **개요 노트 위키링크**, **vault 프로젝트 경로**를 얻는다.
-
-3. **분류 결정**:
-   - **(a) 매칭 성공**: 이 로그는 해당 프로젝트로 분류된다. 로그 블록에 프로젝트 태그(인라인,
-     태그 검색 회수용) + 개요 노트 위키링크(백링크 회수용) + provenance(repo/branch/commit)를
-     붙인다.
-   - **(b) 매칭 실패**: 미분류로 남기되, git repo였다면 REPO 이름만 provenance로 남긴다.
-     그리고 보고 말미에 "이 repo(`<REPO>`)가 Project Map에 없어요 — `00 Meta/00.03 Project
-     Map.md`에 추가할까요?"를 한 줄로 묻는다(승격은 pull 기반, 임의로 표를 수정하지 않는다).
+이 분류 절차(감지 → Project Map 조회 → 매칭 성공/미스 시 자동 추가)는 `/ingest`와 공유하므로
+`${CLAUDE_PLUGIN_ROOT}/resources/wiki-manager/project-classify.md`를 Read해서 그대로 수행하고,
+그 결과(프로젝트 태그 · 개요 노트 위키링크 · provenance `repo/branch/commit` · 또는 개인/일반)를
+아래 캡처 블록의 분류 메타 라인에 반영한다. 미등록 repo는 그 절차에 따라 Project Map에 자동
+추가되며, 개요 노트가 아직 `TODO`인 경우 위키링크는 생략하고 프로젝트 태그·provenance만 붙인다.
 
 ## 절차
 
@@ -75,11 +58,11 @@ disable-model-invocation: true
    - **후속**: 나중에 /ingest로 결정화할 만한 항목이나 미해결 질문 (있으면)
    ```
 
-   - **분류 메타 라인(`> 🗂 …`)**: 위 "프로젝트 자동 분류"의 결과를 담는다.
-     - 매칭 성공: `> 🗂 OCR UI · repo \`rag-mfe-documentai\` · \`feature/schema\`@\`a1b2c3\` · [[10.01.00 Project Overview]] #work/project/ocr-ui` 형태. 프로젝트 태그는 인라인으로
+   - **분류 메타 라인(`> 🗂 …`)**: 위 "프로젝트 자동 분류"(project-classify)의 결과를 담는다.
+     - 매칭/등록됨: `> 🗂 OCR UI · repo \`rag-mfe-documentai\` · \`feature/schema\`@\`a1b2c3\` · [[10.01.00 Project Overview]] #work/project/ocr-ui` 형태. 프로젝트 태그는 인라인으로
        두어야 Obsidian 태그 검색에 잡히고, 개요 노트 위키링크는 그 노트의 백링크에 이 Daily
        Note가 뜨게 해 프로젝트별 회수를 가능하게 한다.
-     - 미분류(git repo): `> 🗂 (미분류) · repo \`<REPO>\` · \`<BRANCH>\`@\`<COMMIT>\`` — 태그·개요 링크는 생략.
+     - 자동 추가됨(개요 노트 TODO): `> 🗂 <REPO> · repo \`<REPO>\` · \`<BRANCH>\`@\`<COMMIT>\` #work/project/<SLUG>` — 프로젝트 태그·provenance는 붙이되 개요 위키링크는 아직 생략(TODO라 대상 없음).
      - git repo 아님: `> 🗂 (개인/일반)` 한 줄만.
    - 시각(`HH:MM`)은 `date +%H:%M`로 채운다.
    - "산출물"은 원문 충실도를 위해 파일 경로·명령·링크를 축약하지 말고 그대로 남긴다.
@@ -89,10 +72,10 @@ disable-model-invocation: true
 5. **하지 않는 것**: 위키링크 삽입, Tag Index 수정, `_inbox/`·`20 Areas/` 노트 생성,
    git 커밋. 이것들이 필요하면 `/ingest`를 쓰도록 안내한다.
 
-6. **보고**: 저장한 Daily Note 경로, 감지·부착한 **분류**(프로젝트명/미분류 + provenance),
-   방금 추가한 블록의 요지 1~2줄을 보고한다. 미분류(git repo인데 Project Map에 없음)였다면
-   "이 repo(`<REPO>`)를 Project Map에 추가할까요?"를 덧붙인다. 그리고 "이 로그를 나중에 자꾸
-   다시 참조하게 되면 `/ingest`로 정식 노트화하세요" 한 줄을 붙인다.
+6. **보고**: 저장한 Daily Note 경로, 감지·부착한 **분류**(프로젝트명 + provenance), 방금 추가한
+   블록의 요지 1~2줄을 보고한다. 미등록 repo라 Project Map에 자동 추가한 경우, project-classify
+   절차대로 "`<REPO>` 행을 자동 추가함(태그 `#work/project/<SLUG>`, vault 경로·개요 노트 TODO)"을
+   알린다. 그리고 "이 로그를 나중에 자꾸 다시 참조하게 되면 `/ingest`로 정식 노트화하세요" 한 줄을 붙인다.
 
 ## 설계 의도
 
