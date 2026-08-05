@@ -29,6 +29,14 @@ session-feedback-summarizer 에이전트
 Observer 서버 → Postgres → 대시보드
 ```
 
+**권한 프롬프트를 플러그인이 직접 없앤다**: 이 파이프라인은 매번 `~/.agent-factory/`
+아래를 읽고 쓰므로 그대로 두면 실행마다 권한 확인이 뜬다. 플러그인 서브에이전트는
+frontmatter 의 `permissionMode`·`hooks` 가 보안상 무시되므로, 허용은 PreToolUse 훅
+`hooks/allow-factory-paths.mjs` 로 건다 — **agent-factory 홈 내부 경로**와 **이 플러그인이
+번들한 스크립트 실행**에만 `permissionDecision: "allow"` 를 내고, 그 밖에는 아무 판정도
+하지 않아 평소 권한 흐름을 그대로 둔다. 사용자의 `deny` 규칙이 항상 우선하므로 이 훅으로
+막아 둔 경로가 열리지는 않는다.
+
 **전송·정리를 Stop 훅이 아니라 summarizer 워크플로에서 끝내는 이유**: "정리해줘" 한 번에
 요약→전송→로컬 정리까지 완결돼 타이밍이 명확하고(다음 턴 Stop 을 기다리지 않는다),
 서버 DB 가 진실의 원천이므로 전송 성공분은 로컬에 남길 이유가 없다. 재시도 안전망은
