@@ -1,0 +1,14 @@
+# agent-factory 산출물.
+#
+# 이 플러그인의 최상위 설계 규칙은 "자기 소유가 아닌 레포에 아무것도 쓰지 않는다"이고
+# (plugins/agent-factory-plugin/lib/factory-home.mjs), 세션 요약·계량치·큐는 전부
+# 사용자 레벨(`~/.agent-factory/`)에 둔다. 레포 안에 생기는 것은 그 규칙 이전의 잔재이며
+# session_id·토큰 소비 상세·회고 판정 같은 개인 기록이 그대로 들어 있다.
+.agent-factory/
+
+# Claude Code 머신별 로컬 설정. 권한 허용 목록에 개인 절대 경로가 섞여 쌓인다.
+# 공유해야 하는 설정은 `.claude/settings.json` 에 둔다(이 파일은 추적 대상).
+.claude/settings.local.json
+
+node_modules/
+.DS_Store

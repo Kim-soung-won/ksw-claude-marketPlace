@@ -1,7 +1,7 @@
 /**
  * 대용량 사용자 입력(프롬프트·붙여넣기)을 급상승 원인으로 잡는지 검증(zero-dep, node:test).
  * distillLines 통합 테스트 — 내용은 싣지 않고 길이·라벨만 남기는지 확인한다.
- * 실행: node --test scripts/lib/distill/hygiene.userinput.test.mjs
+ * 실행: node scripts/validate-all.js (전체 검증) · node --test <파일경로> (이 파일만)
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
