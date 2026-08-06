@@ -14,8 +14,8 @@
 어디에도 기록이 남지 않았다. `errors.jsonl` 에만 흔적이 있었다:
 
 ```
-2026-07-29T02:53:46.719Z | capture | git root 를 찾지 못함 (cwd=/Users/metabuild/.agent-factory)
-2026-07-29T02:53:58.371Z | capture | git root 를 찾지 못함 (cwd=/Users/metabuild/.agent-factory)
+2026-07-29T02:53:46.719Z | capture | git root 를 찾지 못함 (cwd=/Users/<user>/.agent-factory)
+2026-07-29T02:53:58.371Z | capture | git root 를 찾지 못함 (cwd=/Users/<user>/.agent-factory)
 ```
 
 해당 세션의 작업 디렉터리가 `~/.agent-factory`(git 레포가 아님)였고, 커밋은

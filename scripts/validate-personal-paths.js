@@ -17,10 +17,13 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const { ROOT, repoRelative, createReporter } = require('./lib/repo');
 
-const TARGETS = ['plugins', '.claude-plugin', 'CLAUDE.md', 'README.md', 'scripts'];
+// 배포에 실려 나갈 수 있는 곳은 전부 본다. `docs`·`.claude` 가 빠져 있어
+// `docs/issues/` 의 로그 인용에 섞인 개인 경로가 오래 통과했다.
+const TARGETS = ['plugins', '.claude-plugin', 'docs', '.claude', 'CLAUDE.md', 'README.md', 'scripts'];
 
 const SCANNED_EXTENSIONS = /\.(md|json|js|mjs|cjs|ts|sh|bash|zsh|toml|yml|yaml)$/i;
 
@@ -94,6 +97,37 @@ function collectFiles(target, out) {
   }
 }
 
+/**
+ * git 이 무시하는 파일을 걸러낸다.
+ *
+ * 이 검증기의 대상은 "배포되는 파일"이다. gitignore 된 파일(머신별 로컬 설정,
+ * `.agent-factory/` 잔재 등)은 커밋되지 않으므로 유출 경로가 아니고, 오히려 개인
+ * 절대 경로가 들어 있는 게 정상이다. 그것까지 오류로 세면 검증기를 끄게 만든다.
+ *
+ * 판정에 실패하면 거르지 않는다 — 덜 검사하는 쪽이 아니라 더 검사하는 쪽으로 물러선다.
+ *
+ * @param {string[]} files 절대 경로 목록
+ * @returns {string[]}
+ */
+function rejectIgnored(files) {
+  if (files.length === 0) {
+    return files;
+  }
+  const relatives = files.map(file => repoRelative(file));
+  // -z: 입력·출력 모두 NUL 구분. 경로에 공백·비ASCII 가 섞여도 안전하다.
+  const result = spawnSync('git', ['check-ignore', '-z', '--stdin'], {
+    cwd: ROOT,
+    input: relatives.join('\0'),
+    encoding: 'utf8',
+  });
+  // 0 = 무시되는 경로 있음, 1 = 없음. 그 밖(git 부재·비-git 디렉터리 등)은 판정 실패.
+  if (result.error || (result.status !== 0 && result.status !== 1)) {
+    return files;
+  }
+  const ignored = new Set(result.stdout.split('\0').filter(Boolean));
+  return files.filter((_, index) => !ignored.has(relatives[index]));
+}
+
 function main() {
   const report = createReporter('파일');
 
@@ -102,7 +136,7 @@ function main() {
     collectFiles(path.join(ROOT, target), files);
   }
 
-  const scanned = files.filter(file => SCANNED_EXTENSIONS.test(file));
+  const scanned = rejectIgnored(files.filter(file => SCANNED_EXTENSIONS.test(file)));
 
   for (const file of scanned) {
     // 이 검증기 자신은 자리표시자 목록과 정규식 때문에 스스로를 검출한다.
