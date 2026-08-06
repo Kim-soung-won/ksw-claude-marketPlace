@@ -1,6 +1,6 @@
 /**
  * finalizeContextSeries 전량 보존·방어 상한 로직 단위 테스트(zero-dep, node:test).
- * 실행: node --test scripts/lib/distill/
+ * 실행: node scripts/validate-all.js (전체 검증) · node --test <파일경로> (이 파일만)
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
