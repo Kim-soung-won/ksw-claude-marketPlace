@@ -1,0 +1,8 @@
+{
+  "name": "mfe-architecture-plugin",
+  "description": "마이크로 프론트엔드(Module Federation) 아키텍처를 다루는 플러그인 — Host/Remote 설정 생성·검토, Remote 공개 계약 문서화, 런타임 통합 트러블슈팅과 경계 설계 기준을 담는다",
+  "version": "0.1.0",
+  "author": {
+    "name": "kimsoungwon"
+  }
+}
