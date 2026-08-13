@@ -126,6 +126,10 @@ user-card/
 
 > 코드 예시(useQuery 자체 분기 / useSuspenseQuery + 페이지 경계 / mutation): [`examples.md`](./examples.md) §"데이터 패칭 콜로케이션"
 
+> **경계 배치·재조회 UX 심화**: 목록/대시보드/상세 뷰에 `useSuspenseQuery`를 도입해
+> 경계를 어디 두고(필터는 밖), 검색·페이지네이션 재조회를 `useDeferredValue`로 매끄럽게
+> 만드는 패턴은 **suspense-boundary-patterns** 스킬을 읽는다.
+
 ### 안티패턴
 - 패칭을 별도 container 파일로 떼어내 순수 view에 props로만 내려주려는 **강제 분리**
   (이 프로젝트의 기본은 콜로케이션이다).
