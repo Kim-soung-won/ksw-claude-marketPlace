@@ -47,7 +47,7 @@
     {
       "name": "module-federation-official-plugin",
       "source": "./plugins/module-federation-official-plugin",
-      "description": "Module Federation 오픈소스 공식 올인원 스킬(한글화)을 재동기화 가능한 형태로 번들 — 설정·shared·타입(dts)·런타임 에러 코드·모듈 정보·성능·통합을 서브커맨드로 라우팅한다. 하우스 규칙(mfe-architecture-plugin)과 분리된 업스트림 지식 계층"
+      "description": "Module Federation 오픈소스 공식 올인원 스킬(한글화)을 재동기화 가능한 형태로 번들하는 플러그인 — 설정·shared·타입(dts)·런타임 에러 코드·모듈 정보·성능·통합을 서브커맨드로 라우팅한다. 업스트림 지식 계층으로, 팀 하우스 규칙(mfe-architecture-plugin)과 분리해 독립적으로 갱신한다"
     }
   ]
 }
