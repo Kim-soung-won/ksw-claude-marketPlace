@@ -6,6 +6,17 @@
 키다. patch 는 커밋 시 pre-commit 훅이 자동으로 올리고, minor·major 는 직접 올린다 — 판단
 기준과 기록 방법은 루트 [README](../../README.md#버전과-changelog) 참고.
 
+## [1.2.6] - 2026-09-01
+
+### 스킬
+- `console-logging-policy` — `console.error`/`warn`/`log` 의 프로덕션 잔존 여부와 레벨 판정,
+  에러 객체 축약(토큰·응답 본문 유출 방지) 규약. `rsbuild.config.ts` 의 `removeConsole` 설정도 다룬다.
+
+## [1.2.5] - 2026-08-31
+
+### 스킬
+- `suspense-boundary-patterns` — Suspense/ErrorBoundary 배치와 재조회 UX(최초 로드 대 재조회 분리, 2레이어 필터/데이터 분리) 설계 규약
+
 ## [1.2.4] - 2026-08-06
 
 CHANGELOG 도입 기준선이다. 이 버전까지의 변경 내역은 `git log -- plugins/frontend-support-plugin/` 에 있다.
