@@ -6,6 +6,14 @@
 키다. patch 는 커밋 시 pre-commit 훅이 자동으로 올리고, minor·major 는 직접 올린다 — 판단
 기준과 기록 방법은 루트 [README](../../README.md#버전과-changelog) 참고.
 
+## [0.2.0] - 2026-09-01
+
+### 스킬
+- `mf` — Module Federation 오픈소스가 공식 지원하는 올인원 skill을 한글화해 번들.
+  개념·설정·런타임 API·shared/exposes/remotes·타입(dts)·RUNTIME 에러 트러블슈팅·관측(observability)·
+  성능·Bridge 통합을 서브커맨드로 라우팅하며, `scripts/`(config/shared/bridge/type 검사 등)와
+  `reference/`(browser-debug 포함) 리소스를 포함한다.
+
 ## [0.1.1] - 2026-08-06
 
 CHANGELOG 도입 기준선이다. 이 버전까지의 변경 내역은 `git log -- plugins/mfe-architecture-plugin/` 에 있다.
