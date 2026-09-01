@@ -6,6 +6,14 @@
 키다. patch 는 커밋 시 pre-commit 훅이 자동으로 올리고, minor·major 는 직접 올린다 — 판단
 기준과 기록 방법은 루트 [README](../../README.md#버전과-changelog) 참고.
 
+## [0.3.0] - 2026-09-01
+
+### 제거
+- `mf` (공식 올인원 skill)을 신설 `module-federation-official-plugin` 으로 **분리**했다.
+  공식 MF 지식(업스트림 재동기화 대상)과 팀 하우스 규칙을 플러그인 단위로 갈라, 이 플러그인은
+  순수 하우스 규칙(설정 규약·경계 설계·런타임 진단·계약 문서)만 남긴다. 공식 스킬이 필요하면
+  `module-federation-official-plugin` 을 설치한다.
+
 ## [0.2.0] - 2026-09-01
 
 ### 스킬

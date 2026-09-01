@@ -1,8 +1,8 @@
 ---
 name: mf
-description: "Module Federation(모듈 페더레이션) / MFE / 마이크로 프론트엔드(마이크로프론트엔드) 올인원 skill. 사용자가 MF·MFE·모듈 페더레이션에 관해 무엇이든 물을 때 사용 — 개념, 설정, 런타임 API, remotes/exposes/shared 설정, 공유 의존성(singleton), 타입 에러/dts, RUNTIME 에러 코드 트러블슈팅, 관측(observability)/obs, 느린 빌드·HMR 성능, Bridge 통합, host/remote 구성, 또는 기존 프로젝트에 MF 추가·scaffold. 트리거 예: \"MFE 어떻게\", \"모듈 페더레이션 설정\", \"마이크로 프론트엔드\", \"remote 로딩 에러\", \"MF 관측\"."
+description: "Module Federation(모듈 페더레이션/MFE) 공식 올인원 skill. 설정(config·exposes·plugin), 공유 의존성(shared·singleton·requiredVersion), 타입(dts·@mf-types·tsc), 런타임 에러 코드(RUNTIME-xxx·remoteEntry 로딩 실패), 모듈 정보(manifest·remoteEntry URL·publicPath), 빌드·HMR 성능, 기존 프로젝트에 MF 통합·scaffold를 다룬다. 트리거 예: \"모듈 페더레이션 설정\", \"shared/singleton 점검\", \"dts 타입 에러\", \"RUNTIME-008 remoteEntry 로딩 실패\", \"MF 통합해줘\", \"mf-manifest 경로\", \"HMR 느려\". 서브커맨드: config/shared-deps/type-check/runtime-error/module-info/integrate/perf/context/docs."
 argument-hint: <sub-command | natural-language-query> [args...]
-allowed-tools: Read Glob Bash(node *) Bash(npx tsc*) Bash(npx mf dts*) Bash(curl *) Bash(divebell *) Bash(npm install --global @divebell/cli) WebFetch Write Edit AskUserQuestion
+allowed-tools: Read Glob Bash(node *) Bash(npx tsc*) Bash(npx mf dts*) Bash(curl *) WebFetch Write Edit AskUserQuestion
 ---
 
 # MF — Module Federation 올인원 Skill
