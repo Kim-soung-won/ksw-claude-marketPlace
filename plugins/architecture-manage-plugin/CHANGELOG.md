@@ -6,6 +6,32 @@
 키다. patch 는 커밋 시 pre-commit 훅이 자동으로 올리고, minor·major 는 직접 올린다 — 판단
 기준과 기록 방법은 루트 [README](../../README.md#버전과-changelog) 참고.
 
+## [0.3.0] - 2026-09-10
+
+구조 개편 — 소스코드 전용 생성 에이전트와 문답 전용 스킬을 하나의 대화형 모델링
+스킬로 통합하고, 스키마 권위 소스를 번들 JSON Schema + 검증기로 옮겼다.
+
+### 추가
+- `c4-modeling` 스킬 — 메인 세션 안에서 대화로 C4 JSON을 만들어 완성한다. 개발자뿐
+  아니라 기획자·디자이너·고객 등 페르소나별 입력 언어를 C4 개념으로 번역하며, 지정한
+  자료(코드·기획서·API 스펙·인프라 설정)를 세션에서 직접 읽어 초안을 만들고 대화로
+  채운다. 매 턴 `designIntent`(결정·이유·용어·미결·범위밖)를 1급 자산으로 함께 기록한다.
+- `schema/c4-model.schema.json` + `schema/validate.mjs` — 앱 코드(`c4ModelFile.ts`)에서
+  생성된 JSON Schema를 스키마의 **단일 진실 소스**로 번들하고, id 고유성·계층 참조·
+  connection 동일 레벨·deployment 3계층 부모·`designIntent.why` 강제까지 기계 검증한다.
+- `syncing-c4-model/reference.md` — 동기화 스킬 전용 스키마 참조.
+
+### 변경
+- `syncing-c4-model` — 검증을 눈으로 하지 않고 번들 `validate.mjs`로 기계 검증하도록
+  절차를 고쳤다. 전체 재생성·신규 생성은 `c4-modeling` 스킬에 위임한다.
+
+### 제거
+- `c4-schema-generator` 에이전트 — 소스코드 분석 생성 역할을 `c4-modeling` 스킬의
+  "자료 읽기" 단계로 흡수했다.
+- `/c4-interview` 스킬 — 문답식 모델링을 `c4-modeling` 스킬로 통합했다.
+- `resources/c4-model/schema-spec.md` — 스펙 권위 소스를 `schema/`(생성된 JSON Schema)로
+  옮기고, 사람용 요약은 `skills/c4-modeling/reference/schema-spec.md`로 이관했다.
+
 ## [0.2.1] - 2026-09-04
 
 ### 변경

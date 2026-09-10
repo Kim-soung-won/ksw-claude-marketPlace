@@ -34,33 +34,29 @@ allowed-tools: Bash(python3 -m json.tool *)
 1. **대상 JSON 찾기**: 프로젝트 루트와 관례 위치에서 `*-c4.json`,
    `*.c4.json`, `*c4*.json` 패턴을 Glob으로 탐색한다(node_modules 등 의존성
    디렉터리 제외). 후보가 여러 개면 어느 파일인지 사용자에게 확인한다.
-   파일이 없으면 사용자에게 경로를 묻거나, `c4-schema-generator`
-   subagent로 신규 생성을 제안한다.
+   파일이 없으면 사용자에게 경로를 묻거나, `c4-modeling` 스킬로
+   신규 생성을 제안한다.
 2. **변경사항을 스키마 요소에 매핑**: 코드 변경을 노드 추가/삭제,
    `description`·`technology` 수정, `connections` 추가/삭제로 번역한다.
-   스키마 필드·technology 카탈로그·position 관례·healthCheck 보존 규칙은
-   `${CLAUDE_PLUGIN_ROOT}/resources/c4-model/schema-spec.md`를 Read해서
-   따른다 — 그 파일이 스펙의 단일 소스다.
+   스키마 필드·technology 카탈로그·position 관례는
+   [reference.md](reference.md)를 참고한다.
 3. **증분 편집(Edit) 우선**: 기존 JSON에서 영향받은 노드·연결만 Edit로
    고친다. 변경이 광범위해(예: 서비스 대부분의 경계가 바뀜) 증분 편집이
-   비효율적일 때만 `c4-schema-generator` subagent에 전체 재생성을
-   위임한다.
+   비효율적일 때만 `c4-modeling` 스킬로 전체 재생성한다.
 4. **검증** (편집 후 반드시 수행, 실패 시 수정하고 재검증):
-   - JSON 유효성: `python3 -m json.tool <파일> > /dev/null`
-   - 참조 무결성: 모든 `systemId`/`containerId`/`componentId`/
-     `connections[].targetId`가 실존하는 노드 `id`를 가리키는지
-   - 새 노드 필수 필드: `id`, `name`, `type`, `technology`, `description`,
-     `position`, `connections`(없으면 `[]`) 모두 존재하는지
+   - **번들 검증기로 기계 검증**: `node .claude/schema/validate.mjs <파일>`
+     — id 고유성·계층 참조 무결성·connection 동일 레벨·connections 배열·
+     deployment 규칙까지 강제한다. exit 0(PASS)가 나올 때까지 고친다.
    - 새 노드 `position`이 같은 레벨 형제 노드와 겹치지 않는지 — 기존
      노드들의 x/y 간격 관례(레이어 간 x 400, 같은 레이어 y 250)를 따라
-     빈 자리에 배치한다
+     빈 자리에 배치한다 (position은 검증기가 잡지 않으므로 눈으로 확인).
 5. **보고**: 코드 변경 보고에 C4 JSON에서 무엇을 바꿨는지(추가/삭제한 노드,
    수정한 연결)를 한 줄씩 함께 요약한다.
 
 ## 추가 자료
 
-- 스키마 구조·technology 카탈로그·작성 관례:
-  `${CLAUDE_PLUGIN_ROOT}/resources/c4-model/schema-spec.md`
-- 전체 재생성이 필요할 때: 이 플러그인의 `c4-schema-generator` subagent에 위임
-- 편집 전 현재 아키텍처 파악이 필요할 때: 이 플러그인의 `c4-schema-reader`
-  subagent에 위임
+- 스키마 구조·technology 카탈로그·작성 관례: [reference.md](reference.md)
+- 전체 재생성이 필요할 때: `c4-modeling` 스킬
+  (`.claude/skills/c4-modeling/SKILL.md`)
+- 편집 전 현재 아키텍처 파악이 필요할 때: `c4-schema-reader` subagent
+  (`.claude/agents/c4-schema-reader.md`)
