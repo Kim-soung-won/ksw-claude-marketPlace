@@ -1,14 +1,14 @@
 # test-reviewer 감사 체크리스트 (a)~(e)
 
 각 테스트 파일에 대해 아래 항목을 순서대로 점검한다. 판정 근거는 항상
-`${CLAUDE_PLUGIN_ROOT}/skills/test-authoring/SKILL.md`의 규약이며, 소스·테스트에서
+`../../skills/test-authoring/SKILL.md`의 규약이며, 소스·테스트에서
 확인되지 않은 것을 단정하지 않는다.
 
 ---
 
 ## (a) 단언이 구현이 아니라 명세/계약에서 나왔는가
 
-- 대응 도메인 스킬(`.claude/skills/*_scenario|_api|_domain`)이 있으면, 단언이 그 명세의
+- 대응 도메인 스킬(`.agents/skills/` 또는 `.claude/skills/`의 `*_scenario|_api|_domain`)이 있으면, 단언이 그 명세의
   시나리오·API 계약·불변식과 대응하는지 대조한다.
 - 대응 스킬이 없으면 함수 계약(시그니처/JSDoc/반환 불변식)과 대조한다.
 - 구현 코드의 내부 계산 결과를 그대로 기대값으로 박아둔 **change-detector** 단언인지 본다.
@@ -16,7 +16,8 @@
 
 ```bash
 # 대응 도메인 스킬 존재 여부
-find "$(git rev-parse --show-toplevel)/.claude/skills" -name "SKILL.md" | sort
+rg --files --hidden .agents/skills .claude/skills -g "*.md"
+# 존재하는 디렉터리만 검색한다. 두 위치에 같은 명세가 있으면 차이를 확인한다.
 ```
 
 - 명세·계약 근거 없이 구현 결과만 박제 → **CRITICAL** (박제, 신뢰 불가)

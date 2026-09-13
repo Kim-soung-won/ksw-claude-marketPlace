@@ -130,7 +130,7 @@ FSD 의 계층/슬라이스 규칙과 **함께 적용**하는, 컴포넌트 파�
 (주로 `features`·`pages` 의 UI) 안에서 컴포넌트를 어떻게 파일로 쪼갤지 정한다.
 
 > 원본·상세 예시는 `component-design-patterns` 스킬에 있다:
-> `${CLAUDE_PLUGIN_ROOT}/skills/component-design-patterns/SKILL.md`
+> `../../skills/component-design-patterns/SKILL.md`
 > — 구조를 생성·검토하며 컴포넌트 파일을 다룰 때 이 스킬을 Read로 함께 읽는다.
 
 ### 규칙

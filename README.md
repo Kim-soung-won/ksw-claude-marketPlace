@@ -1,11 +1,18 @@
 # ksw-plugins
 
-Claude Code 플러그인 마켓플레이스. 프론트엔드 개발과 Claude Code 자체를 다루는 작업에서
+Claude Code·Codex 플러그인 마켓플레이스. 프론트엔드 개발과 Claude Code 자체를 다루는 작업에서
 반복되는 판단을 서브에이전트·스킬로 묶어둔 것이다.
 
 플러그인은 서로 독립이다. 필요한 것만 골라 설치하면 된다.
 
-## 설치
+## Codex 지원
+
+11개 플러그인을 모두 Codex 카탈로그에 등록했다. 스킬은 플러그인 설치 후 사용할 수 있고,
+격리된 작업이 필요하면 에이전트 18개를 별도로 등록한다. wiki 커맨드 3개는 스킬로도 제공한다.
+[Codex 설치·갱신·지원 범위](docs/codex.md)를 참고한다. `claude-code-docs-plugin`은
+Codex에서 실행해도 Claude Code 정의를 관리하는 도구다.
+
+## Claude Code 설치
 
 Claude Code 안에서 두 줄이면 끝이다.
 
@@ -24,14 +31,17 @@ Claude Code 안에서 두 줄이면 끝이다.
 
 | 플러그인 | 하는 일 | 구성 |
 |---|---|---|
-| [`frontend-support-plugin`](plugins/frontend-support-plugin/) | FSD 구조 scaffold, vitest 테스트 작성·감사, 컴포넌트 설계 기준 | 에이전트 3 · 스킬 3 |
-| [`claude-code-docs-plugin`](plugins/claude-code-docs-plugin/) | 서브에이전트·스킬·hook·MCP 서버를 공식 규격대로 만들고 진단 | 에이전트 6 · 스킬 2 |
-| [`domain-knowledge-plugin`](plugins/domain-knowledge-plugin/) | 협업자에게 받은 API 스펙·시나리오를 SKILL.md 트리오로 기록·감사 | 에이전트 2 |
-| [`wiki-manager-plugin`](plugins/wiki-manager-plugin/) | Obsidian vault 노트 캡처와 위키링크 연계 | 에이전트 1 · 커맨드 3 |
-| [`mfe-architecture-plugin`](plugins/mfe-architecture-plugin/) | Module Federation 설정·경계 설계·런타임 트러블슈팅 | 에이전트 2 · 스킬 2 |
-| [`ui-template-manage-plugin`](plugins/ui-template-manage-plugin/) | 공용 컴포넌트 라이브러리의 인터페이스를 SKILL.md 로 문서화 | 에이전트 1 |
-| [`planning-plugin`](plugins/planning-plugin/) | 기존 코드베이스 변경 계획 JSON 수립 | 에이전트 1 |
-| [`agent-factory-plugin`](plugins/agent-factory-plugin/) | 커밋 단위로 에이전트 사용을 캡처·요약하고 사용 피드백을 남긴다 | 에이전트 1 · 훅 2 · MCP |
+| [`frontend-support-plugin`](plugins/frontend-support-plugin/) | FSD 구조·컴포넌트 설계·Vitest 작성과 감사 | 에이전트 3 · 스킬 6 |
+| [`codex-docs-plugin`](plugins/codex-docs-plugin/) | 공식 문서 기반 Codex 확장 작성·진단 | 스킬 1 |
+| [`claude-code-docs-plugin`](plugins/claude-code-docs-plugin/) | Claude Code 에이전트·스킬·훅·MCP 작성·진단 | 에이전트 6 · 스킬 3 |
+| [`domain-knowledge-plugin`](plugins/domain-knowledge-plugin/) | API·도메인·시나리오 스킬 기록·감사 | 에이전트 2 · 스킬 1 |
+| [`wiki-manager-plugin`](plugins/wiki-manager-plugin/) | Obsidian 캡처·결정화·프로젝트 등록·위키링크 | 에이전트 1 · 스킬 4 · Claude 커맨드 3 |
+| [`mfe-architecture-plugin`](plugins/mfe-architecture-plugin/) | MF 설정·경계·런타임 진단·Remote 계약 | 에이전트 2 · 스킬 3 |
+| [`ui-template-manage-plugin`](plugins/ui-template-manage-plugin/) | 공용 컴포넌트 인터페이스 문서화 | 에이전트 1 · 스킬 1 |
+| [`planning-plugin`](plugins/planning-plugin/) | 기존 코드 변경 계획 JSON 수립 | 에이전트 1 · 스킬 1 |
+| [`agent-factory-plugin`](plugins/agent-factory-plugin/) | 커밋 세션 캡처·피드백·Observer 조회 | 에이전트 1 · 스킬 1 · 훅·MCP |
+| [`module-federation-official-plugin`](plugins/module-federation-official-plugin/) | 공식 Module Federation 통합 스킬 | 스킬 1 |
+| [`architecture-manage-plugin`](plugins/architecture-manage-plugin/) | C4 모델링·동기화·브리핑 | 에이전트 1 · 스킬 3 |
 
 각 플러그인의 변경 내역은 해당 디렉터리의 `CHANGELOG.md` 에 있다.
 
@@ -45,7 +55,7 @@ Claude Code 안에서 두 줄이면 끝이다.
 | Observer 서버 (`~/.agent-factory/config.json` 의 `apiBase`·`token`, 또는 `OBSERVER_API_BASE`·`OBSERVER_TOKEN`) | `agent-factory-plugin` 의 MCP 조회 도구 | 캡처·distill·요약까지는 그대로 동작한다. **MCP 조회 도구 9종만 오류를 반환한다** |
 | `@we/ai-template` 를 쓰는 프로젝트 | `ui-template-manage-plugin` | 문서화할 대상이 없다 |
 
-`agent-factory-plugin` 만 훅을 설치한다. 커밋 시(PostToolUse)와 도구 호출 시(PreToolUse)
+`agent-factory-plugin` 만 훅을 설치한다. Claude에서는 커밋 캡처·권한 훅이, Codex에서는 입력·도구 결과·최종 응답 수집 훅이
 동작하며, **작업 레포에는 아무것도 쓰지 않는다** — 산출물은 전부 사용자 레벨
 `~/.agent-factory/` 에 둔다(위치는 `AGENT_FACTORY_HOME` 으로 변경 가능). 훅은 어떤 경우에도
 커밋을 막지 않는다.

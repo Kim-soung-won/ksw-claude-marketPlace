@@ -158,7 +158,7 @@ function parseCommitTargetDir(command, baseCwd) {
  */
 function resolveTranscript(transcriptPath, sessionId) {
   if (transcriptPath && fs.existsSync(transcriptPath)) return transcriptPath;
-  if (!sessionId) return null;
+  if (!sessionId || process.env.AGENT_FACTORY_RUNTIME === "codex-hooks") return null;
   return findSessionJsonl(path.join(os.homedir(), ".claude", "projects"), `${sessionId}.jsonl`);
 }
 
@@ -348,6 +348,7 @@ function main() {
 
   const capturedAt = new Date().toISOString();
   const entry = {
+    ...(input.source_runtime === "codex-hooks" ? { source_runtime: "codex-hooks" } : {}),
     session_id: sessionId,
     commit,
     commit_message: commitMessage,

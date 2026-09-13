@@ -1,0 +1,6 @@
+{
+  "name": "fsd-structure-architect",
+  "description": "팀 FSD 규칙에 맞게 프론트엔드 구조를 생성하거나 검토한다.",
+  "sandbox_mode": "workspace-write",
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/fsd-structure-architect.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+}

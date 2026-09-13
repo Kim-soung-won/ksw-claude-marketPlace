@@ -42,3 +42,10 @@ Claude Code 패키징 레이어(`SKILL.md` frontmatter)에서 조정했다:
 
 업스트림을 다시 가져올 때 `reference/`·`scripts/`는 통째로 교체해도 되고, 위 두 조정만
 `SKILL.md` frontmatter에 다시 적용하면 된다.
+
+## Codex 지원
+
+같은 `mf` 스킬을 Codex에도 배포한다. `$ARGUMENTS`가 없는 호스트에서는 사용자 요청을
+입력으로 사용하고 도구는 해당 호스트 기능으로 대응한다. 이 호환 규칙은 SKILL.md
+진입점에만 추가했으며 업스트림 reference·scripts는 유지했다. 브라우저 워크플로의
+Divebell 의존성도 유지한다. [설치 안내](../../docs/codex.md)를 참고한다.

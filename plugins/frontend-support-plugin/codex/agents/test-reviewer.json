@@ -1,0 +1,6 @@
+{
+  "name": "test-reviewer",
+  "description": "기존 테스트의 구현 결합과 계약 누락을 읽기 전용으로 감사한다.",
+  "sandbox_mode": "read-only",
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/test-reviewer.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+}

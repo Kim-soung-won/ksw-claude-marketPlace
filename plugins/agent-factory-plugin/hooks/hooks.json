@@ -1,6 +1,5 @@
 {
   "hooks": {
-
     "PreToolUse": [
       {
         "matcher": "Read|Write|Edit|Glob|Grep|Bash",
@@ -14,12 +13,31 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(git *commit*)",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/capture-commit-session.mjs\""
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/dispatch-session.mjs\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/dispatch-session.mjs\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/dispatch-session.mjs\""
           }
         ]
       }

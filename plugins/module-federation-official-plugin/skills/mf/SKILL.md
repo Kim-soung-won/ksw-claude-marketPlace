@@ -1,11 +1,21 @@
 ---
 name: mf
 description: "Module Federation(모듈 페더레이션/MFE) 공식 올인원 skill. 설정(config·exposes·plugin), 공유 의존성(shared·singleton·requiredVersion), 타입(dts·@mf-types·tsc), 런타임 에러 코드(RUNTIME-xxx·remoteEntry 로딩 실패), 모듈 정보(manifest·remoteEntry URL·publicPath), 빌드·HMR 성능, 기존 프로젝트에 MF 통합·scaffold를 다룬다. 트리거 예: \"모듈 페더레이션 설정\", \"shared/singleton 점검\", \"dts 타입 에러\", \"RUNTIME-008 remoteEntry 로딩 실패\", \"MF 통합해줘\", \"mf-manifest 경로\", \"HMR 느려\". 서브커맨드: config/shared-deps/type-check/runtime-error/module-info/integrate/perf/context/docs."
-argument-hint: <sub-command | natural-language-query> [args...]
 allowed-tools: Read Glob Bash(node *) Bash(npx tsc*) Bash(npx mf dts*) Bash(curl *) WebFetch Write Edit AskUserQuestion
 ---
 
 # MF — Module Federation 올인원 Skill
+
+입력 형식: `<sub-command | natural-language-query> [args...]`. 자연어 요청으로 같은 정보를 제공해도 된다.
+
+## 호스트 실행 규칙
+
+Claude Code의 `$ARGUMENTS`가 제공되지 않는 호스트에서는 현재 사용자의 요청 전체를
+입력으로 사용한다. `Read`, `WebFetch`, `AskUserQuestion` 등은 현재 호스트의 파일 읽기·
+웹 조회·질문 기능으로 수행한다. frontmatter의 Claude 도구 허용 목록은 Codex 권한을
+부여하지 않는다. 스크립트 경로는 이 SKILL.md 디렉터리 기준으로 해석한다.
+Divebell이 필요한 브라우저 워크플로는 설치·연결 여부를 확인하고, 없으면 미실행으로
+보고한다. 설치 요청 없이 전역 패키지를 자동 설치하지 않는다.
 
 ## 1단계: 서브 스킬 식별
 

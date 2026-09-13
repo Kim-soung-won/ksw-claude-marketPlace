@@ -57,3 +57,14 @@ node scripts/validate-agents.js     # 개별
 ```bash
 git config core.hooksPath .githooks
 ```
+
+## Codex
+
+`validate-codex.js`는 Codex 카탈로그와 공통 매니페스트, 에이전트 참조를 검증한다.
+`install-codex-agents.py --project <경로>`는 에이전트 등록을 미리 보여주고 `--write`로 적용한다.
+상세 절차는 [Codex 안내](../docs/codex.md)를 참고한다.
+
+전체 에이전트는 `install-codex-agents.py --project <경로> --all`로 미리보고 `--write`로
+등록한다. `--plugin <이름>`은 반복 지정할 수 있다. `test-install-codex-agents.py`는
+미리보기·전체/선택 설치·재실행·충돌 시 쓰기 중단·심볼릭 링크를 검증하며 전체 검증에 포함된다.
+agent-factory의 Codex 수집 통합 회귀는 `hooks/capture-codex-events.test.mjs`에 있다.

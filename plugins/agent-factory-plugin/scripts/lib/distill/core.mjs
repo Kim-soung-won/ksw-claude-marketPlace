@@ -106,6 +106,7 @@ export function distillLines(lines, meta) {
   // 대상으로)에 귀속해, 컨텍스트 급상승의 정체를 스파이크에 라벨로 붙인다.
   const toolUseById = new Map();
   let events = 0;
+  let codexHooks = meta.source_runtime === "codex-hooks";
   // 이 델타 구간 안에서 spawn 된 Agent tool_use 의 id 집합. meta.toolUseId 와 짝이며,
   // 서브에이전트 사이드카를 이 델타에 결정론적으로 귀속하는 1순위 키다(byte 구간 정합).
   const deltaAgentToolUseIds = new Set();
@@ -123,6 +124,7 @@ export function distillLines(lines, meta) {
       continue; // 방어적 파싱: 실패한 라인은 skip
     }
     events++;
+    if (ev.source_runtime === "codex-hooks") codexHooks = true;
     if (ev.attributionAgent) agentsSeen.add(ev.attributionAgent);
     if (typeof ev.timestamp === "string") {
       if (timeStart === null || ev.timestamp < timeStart) timeStart = ev.timestamp;
@@ -257,7 +259,7 @@ export function distillLines(lines, meta) {
   // 잔존하는 attributionAgent 기반 누산 경로도 유지하지만(현재 이벤트 0건, 향후 대비 무해),
   // 둘이 동시에 존재하는 세션이 생기면 같은 에이전트를 이중 계상할 수 있다(현재는 없음).
   for (const { agentType, metrics } of attributeSubagents({
-    subagentsDir: resolveSubagentsDir(meta),
+    subagentsDir: codexHooks ? null : resolveSubagentsDir(meta),
     toolUseIds: deltaAgentToolUseIds,
     timeStart,
     timeEnd,
@@ -316,7 +318,10 @@ export function distillLines(lines, meta) {
   // 대상으로 쓰면 되므로 해시 계산을 LLM 에 맡기지 않는다.
   const projectPath = meta.git_root ?? null;
 
+  const limits = codexHooks ? ["훅 활성화 이후 사용자 입력·도구 결과·Stop 최종 응답만 수집", "중간 assistant 응답·내부 추론·서브에이전트 귀속·토큰 사용량 미측정", "텍스트는 이벤트당 16000자로 제한; 커밋 뒤 Stop 응답은 다음 델타에 포함"] : [];
   return {
+    source_runtime: codexHooks ? "codex-hooks" : "claude",
+    measurement_limits: limits,
     session_id: meta.session_id,
     commit: meta.commit,
     commit_message: meta.commit_message || null,
@@ -331,9 +336,9 @@ export function distillLines(lines, meta) {
     // attributionAgent 로 관측된 에이전트 ∪ 실제 spawn 된 subagent_type. 후자를 합치므로
     // attributionAgent 가 비어도 어떤 sub-agent 를 썼는지가 항상 채워진다.
     agents: [...new Set([...agentsSeen, ...spawnCounts.keys()])],
-    cost_tokens: totals,
+    cost_tokens: codexHooks ? null : totals,
     // 세션 위생(델타 스코프) 지표 — cr:gen 비율·출력 급증·턴 컨텍스트 급증(결정론적).
-    hygiene_delta: computeDeltaHygiene({
+    hygiene_delta: codexHooks ? null : computeDeltaHygiene({
       totals,
       maxResultLen,
       resultSpikeCandidates,
@@ -405,8 +410,10 @@ export function writeMetricsSidecar(entry, digest) {
           project_path: entry.git_root,
           project_name: path.basename(entry.git_root),
           agent_costs: digest.agent_costs,
+          source_runtime: digest.source_runtime,
+          measurement_limits: digest.measurement_limits,
           // 세션 위생(컨텍스트 경계) 지표 — 서버 직송. 스키마는 additive.
-          session_hygiene: sessionHygiene,
+          session_hygiene: digest.source_runtime === "codex-hooks" ? null : sessionHygiene,
         },
         null,
         2,

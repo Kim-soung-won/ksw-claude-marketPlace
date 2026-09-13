@@ -1,10 +1,11 @@
 ---
 name: c4-modeling
 description: C4 Modelizer용 아키텍처 JSON(schemaVersion 2 flat + 선택적 deployment)을 한 세션 안에서 대화로 만들어 완성한다. 개발자뿐 아니라 기획자·디자이너·고객·사용자 누구든 자기 언어로 답하면 표준 모델로 옮겨 준다. 사용자가 읽을 자료(코드 저장소·기획서·API 스펙·인프라 설정·설계 문서 등)를 지정하면 그것을 세션에서 직접 읽어 초안을 만들고, 지정이 없으면 대화만으로 채운다. 트리거 - "C4 모델 만들자/그리자", "아키텍처 JSON 만들어줘", "이 기획서/폴더로 아키텍처 모델 만들어줘", "대화로 C4 채워줘", 또는 기존 C4 JSON을 이어서 채우자고 할 때.
-argument-hint: "[대상 JSON 경로 또는 이름] [읽을 자료 경로(선택)]"
 ---
 
 # C4 대화형 모델링 (in-session)
+
+입력 형식: `[대상 JSON 경로 또는 이름] [읽을 자료 경로(선택)]`. 자연어 요청으로 같은 정보를 제공해도 된다.
 
 아키텍처 모델링은 **여러 턴의 대화 자체가 자산**이다. 이 스킬은 서브에이전트로
 컨텍스트를 분리하지 않고 **메인 세션 안에서** 읽은 자료·모든 문답·중간 판단을
@@ -12,7 +13,7 @@ argument-hint: "[대상 JSON 경로 또는 이름] [읽을 자료 경로(선택)
 매 사용자 답변 턴마다 "**갱신 → 저장 → 커버리지 체크 → 다음 질문**" 루프를 돈다.
 
 스키마·technology 카탈로그·position·deployment 규칙은 **`reference/schema-spec.md`를
-먼저 Read**해서 그대로 따른다(권위 소스는 거기서 가리키는 `.claude/schema/`). 이
+먼저 Read**해서 그대로 따른다(권위 소스는 이 플러그인의 `schema/`). 이
 파일에는 스펙을 중복 기술하지 않는다.
 
 ## 1. 초기화 (첫 턴에만)
@@ -61,7 +62,7 @@ C4 레벨 순서(system→container→component→code)를 기본으로 하되, 
 질문 규칙:
 - 한 턴에 **3~5개 이하**로 묶는다. 한꺼번에 다 묻지 않는다.
 - 선택지가 명확한 질문(DB 엔진, 언어/프레임워크, 프로토콜, nodeType 등)은
-  **AskUserQuestion**으로 묻고, 선택지는 카탈로그 id에 매핑 가능하게 구성한다.
+  호스트의 질문 도구 또는 일반 텍스트로 묻고, 선택지는 카탈로그 id에 매핑 가능하게 구성한다.
 - 서술형(역할·책임)은 일반 텍스트로 묻는다.
 - "모른다/나중에"는 건너뛰고 커버리지 표에 남긴다.
 
@@ -109,10 +110,14 @@ C4 레벨 순서(system→container→component→code)를 기본으로 하되, 
 사용자가 "됐다"고 하면 **번들 검증기로** 검증한다(눈으로 체크하지 말고 기계로):
 
 ```bash
-node ${CLAUDE_PROJECT_DIR}/.claude/schema/validate.mjs <대상파일.json>
+node "<플러그인 루트>/schema/validate.mjs" <대상파일.json>
 ```
 
 id 고유성·계층 참조·connection 동일 레벨·connections 배열·deployment 3계층 부모
 규칙·containerInstance container 참조까지 강제한다. **exit 0(PASS)**가 나올 때까지
 수정·재검증한 뒤 완료 요약을 보고한다: 저장 경로, 레벨별 노드 개수(+deployment),
 주요 technology id, 인터뷰에서 확인 못 해 비워둔 항목.
+
+`<플러그인 루트>`는 이 SKILL.md 위치에서 `../..`를 해석한 실제 절대 경로다.
+[번들 검증기](../../schema/validate.mjs)와 [JSON Schema](../../schema/c4-model.schema.json)를 사용한다.
+프로젝트에 `.claude/schema`를 복사할 필요가 없다.

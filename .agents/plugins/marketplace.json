@@ -1,0 +1,140 @@
+{
+  "name": "personal",
+  "interface": {
+    "displayName": "Personal"
+  },
+  "plugins": [
+    {
+      "name": "frontend-support-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/frontend-support-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "codex-docs-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex-docs-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "agent-factory-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/agent-factory-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "architecture-manage-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/architecture-manage-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "claude-code-docs-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/claude-code-docs-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "domain-knowledge-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/domain-knowledge-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "mfe-architecture-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mfe-architecture-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "module-federation-official-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/module-federation-official-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "planning-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/planning-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "ui-template-manage-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ui-template-manage-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "wiki-manager-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/wiki-manager-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

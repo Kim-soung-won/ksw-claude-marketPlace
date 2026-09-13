@@ -16,6 +16,13 @@
   **이전 distill 에서 만든 `.md` 가 아직 push 로 정리되지 않은 채 같은 커밋이 다시 큐에
   잡혀 재처리되는 교차-distill 재처리** 시에만, 기존 파일을 덮어쓰지 않으려고 남긴다.
 
+## Codex 훅 기록의 측정 한계
+
+`digest.source_runtime`이 `codex-hooks`이면 frontmatter의 `cost_tokens`는 `null`로
+유지하고 비용·세션 위생 절에는 **미측정**이라고 적는다. `measurement_limits`를 함께
+요약한다. 비어 있는 agents 목록은 에이전트 미사용을 증명하지 않는다. 도구 이름·결과에서
+확인할 수 있는 사실만 적고 서브에이전트 귀속과 토큰 수를 추측하지 않는다.
+
 ## 파일 형식
 
 ```markdown

@@ -1,7 +1,7 @@
 {
   "name": "architecture-manage-plugin",
   "description": "프로젝트 아키텍처를 C4 모델(C4 Modelizer schemaVersion 2 flat + deployment·designIntent JSON)로 관리하는 플러그인 — 코드·문서·대화로 모델을 만들어 완성하는 대화형 모델링(c4-modeling), 모델 해석 브리핑(c4-schema-reader), 코드 변경 시 모델 증분 동기화(syncing-c4-model)를 담고, 번들 JSON Schema 검증기(schema/validate.mjs)로 무결성을 강제한다",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "kimsoungwon"
   }

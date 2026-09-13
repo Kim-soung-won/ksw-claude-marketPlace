@@ -128,3 +128,15 @@ chmod 600 ~/.agent-factory/config.json
 
 - Node.js (세션 JSONL 파싱·전처리). 대상 레포가 프론트엔드 프로젝트라 통상 이미 있다.
 - 세션 JSONL 구조의 근거: `claude-code-docs-plugin`의 `claude-code-jsonl` 스킬.
+
+## Codex 지원
+
+Codex 카탈로그에서도 설치할 수 있다. `session-feedback` 스킬과 별도 등록 가능한
+`session-feedback-summarizer`를 제공한다. Claude의 세션 JSONL 파싱을 Codex에 적용하지
+않고, 공식 UserPromptSubmit·PostToolUse·Stop 훅 입력을 자체 JSONL에 기록한다.
+Codex에서는 기존 자동 권한 허용 훅이 아무 결정을 내리지 않는다.
+
+Codex digest의 토큰·비용은 미측정(`cost_tokens: null`)이며 중간 응답·서브에이전트 내부
+기록은 수집하지 않는다. 훅 활성화 이후의 입력·도구 결과·최종 응답으로만 요약한다.
+로컬 요약 요청만으로 서버 전송·성공분 삭제를 실행하지 않는다.
+[설치·정확한 지원 범위](../../docs/codex.md#agent-factory의-codex-수집)를 참고한다.

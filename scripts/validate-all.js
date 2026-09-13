@@ -25,6 +25,8 @@ const REPO_ROOT = path.join(__dirname, '..');
 const TEST_GLOB = 'plugins/**/*.test.mjs';
 
 const STEPS = [
+  ['Codex 설치 도구', [path.join(__dirname, 'test-install-codex-agents.py')], 'python3'],
+  ['Codex 배포 정합성', [path.join(__dirname, 'validate-codex.js')]],
   ['매니페스트 정합성', [path.join(__dirname, 'validate-manifests.js')]],
   ['에이전트 정의', [path.join(__dirname, 'validate-agents.js')]],
   ['스킬 정의', [path.join(__dirname, 'validate-skills.js')]],
@@ -37,9 +39,9 @@ const STEPS = [
 
 let failed = 0;
 
-for (const [label, argv] of STEPS) {
+for (const [label, argv, executable = process.execPath] of STEPS) {
   console.log(`\n▸ ${label}`);
-  const result = spawnSync(process.execPath, argv, {
+  const result = spawnSync(executable, argv, {
     stdio: 'inherit',
     cwd: REPO_ROOT,
   });

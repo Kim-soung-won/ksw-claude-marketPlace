@@ -1,5 +1,16 @@
 # Changelog — frontend-support-plugin
 
+## [1.4.0] - 2026-09-10
+
+- Codex 카탈로그와 공통 스킬 배포 지원.
+- Codex 실행 규약·에이전트 등록 또는 스킬 호출 경로 정리.
+
+## [1.3.0] - 2026-09-10
+
+- Codex 마켓플레이스와 공통 스킬 배포 매니페스트 추가.
+- Codex 에이전트 3종의 등록 템플릿과 설치 스크립트 추가.
+- 공통 리소스 상대 경로와 양쪽 도메인 스킬 탐색 지원.
+
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) · 버전: [SemVer](https://semver.org/lang/ko/)
 
 이 플러그인의 `version` 은 사용자 측 `/plugin marketplace update` 가 갱신을 인식하는 유일한

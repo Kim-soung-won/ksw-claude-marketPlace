@@ -59,6 +59,8 @@ function isBundledScript(command) {
 }
 
 function main(payload) {
+  // Codex는 현재 샌드박스·승인 정책을 유지한다. Claude의 자동 허용을 이식하지 않는다.
+  if (process.env.PLUGIN_ROOT) return;
   const tool = payload.tool_name;
   const input = payload.tool_input || {};
 

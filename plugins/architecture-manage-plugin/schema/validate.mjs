@@ -5,8 +5,8 @@
 // deployment 3계층 부모 규칙, containerInstance → 논리 container 참조 무결성.
 // 이걸 통과하면 앱에 import 했을 때 깨지지 않음을 보장한다.
 //
-// 사용:  node .claude/schema/validate.mjs <model.json>
-//        node .claude/schema/validate.mjs <model.json> --json   (기계용 출력)
+// 사용:  node <플러그인 루트>/schema/validate.mjs <model.json>
+//        node <플러그인 루트>/schema/validate.mjs <model.json> --json   (기계용 출력)
 //
 // enum 값은 c4-model.schema.json과 같은 TS 타입에서 나온 것이며 동기 상태여야 한다.
 
@@ -317,7 +317,7 @@ function runCli() {
   const asJson = args.includes("--json");
   const path = args.find((a) => !a.startsWith("--"));
   if (!path) {
-    console.error("사용법: node .claude/schema/validate.mjs <model.json> [--json]");
+    console.error("사용법: node <플러그인 루트>/schema/validate.mjs <model.json> [--json]");
     process.exit(2);
   }
 

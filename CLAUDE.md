@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+공통 개발 규약과 Codex 배포 범위는 [AGENTS.md](AGENTS.md)를 먼저 참고한다.
+이 문서의 Claude 도구·모델·가격 설명은 Claude Code 실행에만 적용한다.
+
 ## 이 저장소의 정체
 
 Claude Code **플러그인 마켓플레이스**다. 빌드·린트·테스트 툴체인이 없고(패키지 매니저 없음),
@@ -21,8 +24,7 @@ plugins/<plugin-name>/
   skills/<skill>/SKILL.md            ← (일부 플러그인) 스킬 정의 + examples.md
 ```
 
-현재 5개 플러그인: `wiki-manager-plugin`, `claude-code-docs-plugin`,
-`domain-knowledge-plugin`, `ui-template-manage-plugin`, `frontend-support-plugin`.
+현재 11개 플러그인을 Claude Code·Codex 카탈로그에 함께 배포한다. 목록은 README.md를 참고한다.
 
 새 플러그인을 추가하면 **반드시 두 곳을 동기화**한다: 루트 `marketplace.json`의 `plugins[]`
 항목과 해당 플러그인의 `.claude-plugin/plugin.json`.

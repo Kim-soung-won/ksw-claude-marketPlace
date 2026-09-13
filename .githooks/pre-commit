@@ -103,6 +103,28 @@ done <<EOF
 $plugins_changed
 EOF
 
+# Claude 버전을 공유하는 Codex 매니페스트도 동기화한다.
+while IFS= read -r plugin; do
+  codex_manifest="plugins/$plugin/.codex-plugin/plugin.json"
+  [ -f "$codex_manifest" ] || continue
+  # 부분 스테이징된 매니페스트를 덮어쓰지 않는다.
+  if ! git diff --quiet -- "$codex_manifest"; then
+    echo "pre-commit: $codex_manifest 변경을 먼저 스테이징하세요." >&2
+    exit 1
+  fi
+  node -e '
+    const fs = require("fs");
+    const [claudePath, codexPath] = process.argv.slice(1);
+    const claude = JSON.parse(fs.readFileSync(claudePath));
+    const codex = JSON.parse(fs.readFileSync(codexPath));
+    codex.version = claude.version;
+    fs.writeFileSync(codexPath, JSON.stringify(codex, null, 2) + "\n");
+  ' "plugins/$plugin/.claude-plugin/plugin.json" "$codex_manifest" || exit 1
+  git add "$codex_manifest"
+done <<EOF
+$plugins_changed
+EOF
+
 # 버전 상승까지 끝난 뒤 검증한다 — 훅이 방금 고친 plugin.json 도 검사 대상이다.
 run_validators
 exit $?

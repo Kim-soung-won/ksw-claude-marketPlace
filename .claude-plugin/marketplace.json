@@ -53,6 +53,11 @@
       "name": "architecture-manage-plugin",
       "source": "./plugins/architecture-manage-plugin",
       "description": "프로젝트 아키텍처를 C4 모델(C4 Modelizer schemaVersion 2 flat + deployment·designIntent JSON)로 관리하는 플러그인 — 코드·문서·대화로 모델을 만들어 완성하는 대화형 모델링(c4-modeling), 모델 해석 브리핑(c4-schema-reader), 코드 변경 시 모델 증분 동기화(syncing-c4-model)를 담고, 번들 JSON Schema 검증기(schema/validate.mjs)로 무결성을 강제한다"
+    },
+    {
+      "name": "codex-docs-plugin",
+      "source": "./plugins/codex-docs-plugin",
+      "description": "Codex 설정·스킬·에이전트·플러그인·훅·MCP의 작성과 진단을 최신 OpenAI 공식 문서에 근거해 수행하는 플러그인"
     }
   ]
 }
