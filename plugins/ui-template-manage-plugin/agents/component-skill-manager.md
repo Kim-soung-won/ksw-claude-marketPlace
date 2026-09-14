@@ -12,7 +12,7 @@ description: >-
   assistant: component-skill-manager 에이전트를 호출해 .tsx 소스에서 props·타입·export를 추출한 SKILL.md를 작성하겠습니다.
   </example>
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: opus
 color: cyan
 ---
 

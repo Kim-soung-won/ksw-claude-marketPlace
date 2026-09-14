@@ -22,7 +22,7 @@ description: >-
   assistant: mfe-config-architect 에이전트를 호출해 Host·Remote 전체의 shared 키·singleton을 교차 대조한 등급별 리포트를 받겠습니다.
   </example>
 tools: Read, Write, Edit, Grep, Glob, Bash
-model: sonnet
+model: opus
 color: blue
 ---
 

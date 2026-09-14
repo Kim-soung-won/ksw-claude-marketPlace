@@ -13,7 +13,7 @@ description: >-
   assistant: domain-skill-reviewer 에이전트를 호출해 _api/_domain/_scenario trio와 소스의 경로·타입 불일치를 전수 점검한 리포트를 받겠습니다.
   </example>
 tools: Read, Grep, Glob, Bash, Agent
-model: sonnet
+model: opus
 color: orange
 ---
 

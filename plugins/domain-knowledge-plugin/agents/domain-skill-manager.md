@@ -12,7 +12,7 @@ description: >-
   assistant: 먼저 domain-skill-manager 에이전트를 호출해 이 API 스펙을 도메인 SKILL.md로 기록한 뒤 화면 개발로 넘어가겠습니다.
   </example>
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: opus
 color: purple
 ---
 

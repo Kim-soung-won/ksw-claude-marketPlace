@@ -21,7 +21,7 @@ description: >-
   assistant: remote-contract-manager 에이전트를 호출해 exposes와 문서를 대조한 감사 리포트를 받겠습니다.
   </example>
 tools: Read, Write, Edit, Grep, Glob, Bash
-model: sonnet
+model: opus
 color: cyan
 ---
 

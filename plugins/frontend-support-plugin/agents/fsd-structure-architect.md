@@ -19,7 +19,7 @@ description: >-
   assistant: fsd-structure-architect 에이전트를 호출해 FSD 레이어·슬라이스·public API 배럴 규칙에 맞춰 구조를 scaffold하겠습니다.
   </example>
 tools: Read, Write, Edit, Grep, Glob, Bash
-model: sonnet
+model: opus
 color: green
 ---
 
