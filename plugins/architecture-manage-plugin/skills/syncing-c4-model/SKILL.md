@@ -1,6 +1,7 @@
 ---
 name: syncing-c4-model
 description: 코드 수정 중 아키텍처에 영향을 주는 변경(새 서비스·워커·API 서버·CLI 명령 그룹 추가/삭제, 외부 API·메시지 브로커·DB 등 외부 의존성 추가/제거, 컨테이너 간 통신 방식이나 호출 경로 변경, DB·프레임워크 등 기술 스택 교체, 라우터·핵심 모듈의 추가·삭제·책임 이동)이 발생하면 해당 프로젝트의 C4 모델 JSON(schemaVersion 2 flat, C4 Modelizer용)을 함께 증분 업데이트해 코드와 아키텍처 다이어그램의 불일치를 방지한다. 사용자가 "C4 모델 갱신", "아키텍처 다이어그램 동기화", "c4.json 업데이트"를 요청할 때도 사용한다.
+allowed-tools: Bash(python3 -m json.tool *)
 ---
 
 # C4 모델 동기화
@@ -43,7 +44,7 @@ description: 코드 수정 중 아키텍처에 영향을 주는 변경(새 서�
    고친다. 변경이 광범위해(예: 서비스 대부분의 경계가 바뀜) 증분 편집이
    비효율적일 때만 `c4-modeling` 스킬로 전체 재생성한다.
 4. **검증** (편집 후 반드시 수행, 실패 시 수정하고 재검증):
-   - **번들 검증기로 기계 검증**: `node "<플러그인 루트>/schema/validate.mjs" <파일>`
+   - **번들 검증기로 기계 검증**: `node .claude/schema/validate.mjs <파일>`
      — id 고유성·계층 참조 무결성·connection 동일 레벨·connections 배열·
      deployment 규칙까지 강제한다. exit 0(PASS)가 나올 때까지 고친다.
    - 새 노드 `position`이 같은 레벨 형제 노드와 겹치지 않는지 — 기존
@@ -56,9 +57,6 @@ description: 코드 수정 중 아키텍처에 영향을 주는 변경(새 서�
 
 - 스키마 구조·technology 카탈로그·작성 관례: [reference.md](reference.md)
 - 전체 재생성이 필요할 때: `c4-modeling` 스킬
-  ([원본](../c4-modeling/SKILL.md))
+  (`.claude/skills/c4-modeling/SKILL.md`)
 - 편집 전 현재 아키텍처 파악이 필요할 때: `c4-schema-reader` subagent
-  ([브리핑 스킬](../c4-briefing/SKILL.md))
-
-`<플러그인 루트>`는 이 SKILL.md 기준 `../..`의 실제 절대 경로다.
-[번들 검증기](../../schema/validate.mjs)를 이 경로로 실행한다.
+  (`.claude/agents/c4-schema-reader.md`)

@@ -1,5 +1,19 @@
 # Changelog — architecture-manage-plugin
 
+## [0.5.0] - 2026-09-14
+
+### 변경
+- 스킬·검증기의 리소스 경로 표기를 `<플러그인 루트>/schema/` → `.claude/schema/`로
+  통일하고, `validate.mjs` 사용법·에러 메시지도 같은 경로로 맞췄다.
+- `c4-modeling` — 입력 형식을 `argument-hint` frontmatter로 옮기고, 선택지형 질문을
+  `AskUserQuestion`으로 묻도록 명시했다.
+- `syncing-c4-model` — `allowed-tools`에 `Bash(python3 -m json.tool *)`를 추가하고,
+  형제 스킬·에이전트 참조를 `.claude/` 경로로 정리했다.
+
+### 제거
+- `c4-briefing` 스킬 — 브리핑 역할을 `c4-schema-reader` 에이전트 직접 호출로 대체하고
+  래퍼 스킬을 제거했다.
+
 ## [0.4.0] - 2026-09-10
 
 - Codex 카탈로그와 공통 스킬 배포 지원.

@@ -1,10 +1,10 @@
 # C4 Modelizer 스키마 스펙 (사람용 요약)
 
 > **권위 소스**: 이 문서는 사람이 읽기 위한 요약이다. 실제 스키마의 **단일 진실
-> 소스는 앱 코드에서 생성된** [번들 JSON Schema](../../../schema/c4-model.schema.json)(JSON Schema)이며,
+> 소스는 앱 코드에서 생성된** `.claude/schema/c4-model.schema.json`(JSON Schema)이며,
 > 원본 타입은 `src/types/c4ModelFile.ts`다. 필드·enum이 아래와 어긋나면 **생성된
 > 스키마가 우선**한다 (`npm run gen:schema`로 갱신). 최종 검증은 항상
-> [번들 검증기](../../../schema/validate.mjs)로 한다.
+> `.claude/schema/validate.mjs`로 한다.
 
 이 스키마는 **논리 4레벨(system/container/component/code) + 물리 deployment 레이어**를 담는다.
 
@@ -177,7 +177,7 @@ DeploymentNode 필드:
 저장 후 반드시 기계 검증:
 
 ```bash
-node "<플러그인 루트>/schema/validate.mjs" <파일.json>
+node .claude/schema/validate.mjs <파일.json>
 ```
 
 id 고유성·계층 참조·connection 동일 레벨·deployment 3계층 부모 규칙·containerInstance
