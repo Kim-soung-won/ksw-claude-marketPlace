@@ -8,6 +8,7 @@
 - 예시 A — 스킬 기반: zustand 스토어 (`server-id-store.test.ts`)
 - 예시 B — 계약 기반: 검증 함수 (`node-validator.test.ts`)
 - 두 예시의 대비 요약
+- 실패·방어 경로 예시 — nullish 입력 + zod 무효 입력
 - RTL 실전 함정 — 컴포넌트 테스트에서 반복해 부딪힌 것들
 
 ---
@@ -103,6 +104,48 @@ change-detector가 되지 않는다.
 공통점: 둘 다 **구현 코드를 베끼지 않고** 각자의 출처(명세/계약)에서 "해야 하는
 것"을 유도했고, 근거를 주석으로 남겼으며, node 환경으로 충분했다. RTL 렌더가
 필요한 경우에만 `// @vitest-environment jsdom` + 공용 test-utils 하니스로 전환한다.
+
+---
+
+## 실패·방어 경로 예시 — nullish 입력 + zod 무효 입력
+
+성공 입력만 단언한 테스트는 방어 로직의 회귀를 놓친다(SKILL "nullish·무효 입력
+방어를 필수로 단언한다" 절). 아래는 계약 기반 검증 함수·순수 로직에 무효·nullish
+입력을 함께 단언한 예다.
+
+```ts
+// 대응 스킬 없음 — 함수 계약(시그니처·불변식)에서 유도. nullish·무효 입력 방어를 필수 케이스로 포함.
+describe("parseOrderPayload (zod schema)", () => {
+  it("유효 입력은 파싱된 값을 돌려준다", () => {
+    // 계약: { id: string, total: number }
+    expect(parseOrderPayload({ id: "o-1", total: 3 })).toMatchObject({ id: "o-1", total: 3 });
+  });
+
+  it("무효 입력(누락·타입 불일치)이면 parse가 throw한다", () => {
+    // 불변식: 계약 위반 입력 ⇒ parse throw. 메시지 문자열 정확 일치는 하지 않는다.
+    expect(() => parseOrderPayload({ id: "o-1" })).toThrow();            // total 누락
+    expect(() => parseOrderPayload({ id: "o-1", total: "3" })).toThrow(); // 타입 불일치
+  });
+
+  it("safeParse는 무효 입력에서 success:false를 준다", () => {
+    expect(parseOrderPayloadSafe(null)).toMatchObject({ success: false });
+    expect(parseOrderPayloadSafe({ id: "o-1", total: 3 })).toMatchObject({ success: true });
+  });
+});
+
+describe("sumOrderTotals (순수 로직)", () => {
+  it("nullish·빈 입력을 안전 처리한다", () => {
+    // 계약(JSDoc): 입력이 없으면 0을 돌려준다 → 여기선 throw가 아니라 기본값이 계약
+    expect(sumOrderTotals(undefined)).toBe(0);
+    expect(sumOrderTotals([])).toBe(0);
+    // 반대로 throw가 계약인 함수라면 expect(() => fn(null)).toThrow()로 유도한다.
+  });
+});
+```
+
+핵심: 무효·nullish 입력의 기대 동작(throw인지 기본값인지)을 **계약·스킬에서
+유도**해 명시하고, throw 여부·`success` 플래그·반환 불변식 위주로 단언한다.
+에러 메시지 문구 정확 일치는 change-detector이므로 피한다.
 
 ---
 

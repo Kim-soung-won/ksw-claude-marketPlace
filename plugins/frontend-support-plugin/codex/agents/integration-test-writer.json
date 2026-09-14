@@ -1,0 +1,6 @@
+{
+  "name": "integration-test-writer",
+  "description": "페이지/사용자 흐름을 실제 모듈 연결 + MSW 경계 모킹으로 vitest+RTL 통합 테스트를 작성·실행하고 결과를 요약한다.",
+  "sandbox_mode": "workspace-write",
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/integration-test-writer.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+}

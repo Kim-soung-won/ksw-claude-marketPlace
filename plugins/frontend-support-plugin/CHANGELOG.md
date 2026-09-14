@@ -1,5 +1,42 @@
 # Changelog — frontend-support-plugin
 
+## [1.5.0] - 2026-09-14
+
+### 에이전트
+- `integration-test-writer` — 페이지/사용자 흐름 하나를 여러 모듈(컴포넌트+상태+로직+API 요청 코드)을
+  실제로 연결한 채 vitest+RTL 통합 테스트로 작성·실행·통과 확인(요약만 반환). 네트워크 경계는 MSW로
+  HTTP 레벨에서만 모킹하고, 단언은 사용자가 관찰하는 화면 변화(RTL 접근성 쿼리)에서 유도한다.
+  여러 흐름 병렬 fan-out 워커로도 쓴다.
+
+### 스킬
+- `integration-test-authoring` — 통합 테스트 규약(단위 규약 `test-authoring`의 대칭짝). 내부 연결은
+  실제로·경계만 MSW, 단언은 관찰 동작에서 유도, 작성 단위는 페이지/흐름. 프로젝트 `./.claude/skills/`의
+  도메인 스킬(`*_api.md`/`*_scenario.md`/`*_domain.md`)을 MSW 응답·케이스·단언의 1순위 근거로 삼고,
+  신뢰도 의심 시 `domain-skill-reviewer` 선행 게이트를 둔다.
+- `msw-mocking` — Mock Service Worker **v2** API 레퍼런스(공식 docs 근거). `http` 핸들러·`HttpResponse`·
+  `msw/node`의 `setupServer` 라이프사이클·`server.use` 2계층 오버라이드·`delay`를 정확한 v2 문법으로
+  정리하고 v1(`rest`/`res(ctx)`) 문법을 명시 배제한다. `integration-test-writer`가 MSW 핸들러 작성 시 참조.
+- `test-authoring`(보강) — 단위 테스트도 대응 도메인 스킬을 `./.claude/skills/`에서 능동 탐색해 단언
+  근거로 삼도록 A절·워크플로에 탐색 절차를 명시(도메인 지식 참조 가이드라인).
+
+### 실패·방어 경로 커버 가이드라인(스킬 보강)
+- `integration-test-authoring` — 성공 응답만 박제하지 않도록 "최우선 원칙 4" 신설: MSW로 계약 위반
+  응답(필드 누락·타입 불일치·`null`·빈 배열)을 세워 zod 검증 throw → ErrorBoundary → ErrorPage 전환을
+  관찰 단언, null/undefined·부분 데이터 경계는 ErrorPage vs 빈 상태 중 무엇이 계약인지 도메인 스킬에서
+  유도. examples에 계약 위반 → ErrorPage 오버라이드 스니펫 추가.
+- `test-authoring` — nullish/무효 입력 방어를 필수 케이스로 규약화: `null`/`undefined`/빈 배열/누락 필드에
+  throw인지 안전 처리인지 계약·스킬에서 유도해 단언, 검증 함수는 유효·무효 입력 둘 다(`parse` throw /
+  `safeParse` `success:false`). examples에 nullish·zod 무효 입력 스니펫 추가.
+
+### 리소스
+- `integration-test-writer/dependency-preflight.md` — 통합 테스트 필수 의존성(`msw`·RTL·jsdom·공용
+  test-utils 하니스) 부재 시 대응 절차. 깨진 테스트를 남기지 않고, 패키지 매니저별 설치 명령과 함께
+  차단 보고한다.
+
+## [1.4.1] - 2026-09-14
+
+- 서브에이전트 `fsd-structure-architect` 모델을 `opus`로 상향(토큰 여유 반영).
+
 ## [1.4.0] - 2026-09-10
 
 - Codex 카탈로그와 공통 스킬 배포 지원.

@@ -1,5 +1,9 @@
 # Changelog — mfe-architecture-plugin
 
+## [0.4.1] - 2026-09-14
+
+- 서브에이전트 `mfe-config-architect`·`remote-contract-manager` 모델을 `opus`로 상향(토큰 여유 반영).
+
 ## [0.4.0] - 2026-09-10
 
 - Codex 카탈로그와 공통 스킬 배포 지원.

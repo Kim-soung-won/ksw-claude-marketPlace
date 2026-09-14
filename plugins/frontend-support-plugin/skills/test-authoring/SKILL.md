@@ -51,6 +51,14 @@ react-query, FSD 구조 프로젝트에서 검증됐다.
 **given/when/then · 상태 전이 · "핵심 제약사항"**이 테스트 케이스로 거의 1:1
 매핑된다. `*_api.md`(입출력 계약)와 `*_domain.md`(도메인 규칙)도 함께 참조한다.
 
+- **먼저 대상 모듈에 대응하는 도메인 스킬을 프로젝트에서 찾는다.** 이 도메인 스킬은
+  `domain-skill-manager`가 만들어 프로젝트 경로의 `./.claude/skills/` 아래에 두는 산출물이다.
+  ```bash
+  git rev-parse --show-toplevel
+  find "$(git rev-parse --show-toplevel)/.claude/skills" -name "SKILL.md" | sort
+  ```
+  대상 도메인과 매칭되는 `*_scenario`/`*_api`/`*_domain` 스킬을 Read해 단언의 1순위 근거로
+  삼는다. 매칭되는 스킬이 없으면 순수 로직으로 보고 아래 B(함수 계약)로 넘어간다.
 - 각 테스트 케이스 주석에 근거가 된 스킬 항목을 남긴다
   (예: `// scenario: "상태 관리 흐름" — step 0→1 전이`). 나중에 스펙이 바뀌면
   어느 테스트를 고쳐야 하는지 추적 가능해진다.
@@ -72,6 +80,37 @@ react-query, FSD 구조 프로젝트에서 검증됐다.
   이런 단언은 계약 기반에서도 change-detector가 되는 위험 지점이다. 문자열은
   전체 일치 대신 핵심 부분 포함(`.includes(...)`) 수준으로, 문서화된 규칙에
   묶여 있을 때만 쓴다.
+
+---
+
+## 성공 입력만이 아니라 nullish·무효 입력 방어를 필수로 단언한다
+
+> **성공 경로만 박제하지 않는다.** 함수가 `null`/`undefined`/빈 배열/누락 필드
+> 같은 방어 경로 입력을 받았을 때 어떻게 행동해야 하는지도 계약·스킬에서 유도해
+> 단언한다. 이 경계를 빼면 리팩터링이 아니라 실제 방어 로직의 회귀를 놓친다.
+
+A(스킬 기반)·B(계약 기반) 어느 갈래든 아래를 **필수 케이스로** 포함한다.
+
+### nullish·부분 입력 방어
+
+- 함수가 `null`/`undefined`/빈 배열/누락 필드를 받았을 때 **throw하는지 안전
+  처리(기본값·빈 결과)하는지**를 단언한다. 어느 쪽이 계약인지는 시그니처·JSDoc·
+  불변식(B) 또는 대응 도메인 스킬의 핵심 제약·도메인 규칙(A)에서 유도한다 —
+  "당연히 안전하겠지" 하고 넘기지 않는다.
+- 설계상 throw가 계약이면 `expect(() => fn(null)).toThrow()` 수준으로 **throw
+  여부만** 단언하고, 에러 메시지 문자열 정확 일치 같은 구현 결합 단언은 기존
+  규약대로 최소화한다(불변식·throw 여부 위주).
+
+### 검증 함수(zod schema.parse 등)는 유효·무효 둘 다
+
+검증 함수는 유효 입력만 통과 확인하고 끝내지 않는다. **무효 입력까지** 단언한다.
+
+- `schema.parse(...)`: 무효 입력에서 **throw**하는지
+  (`expect(() => schema.parse(bad)).toThrow()`).
+- `schema.safeParse(...)`: 무효 입력에서 `{ success: false }`를, 유효 입력에서
+  `{ success: true }`를 주는지 양쪽.
+- 여기서도 `error.issues`의 정확한 메시지 문자열 대신 **성공/실패 여부와 실패한
+  경로(불변식)** 위주로 단언한다. 메시지 문구 정확 일치는 change-detector가 된다.
 
 ---
 
@@ -141,14 +180,17 @@ src/entities/workflow/workflow/node-validator.ts
 
 ```
 테스트 작성 진행:
-- [ ] 1. 대상 모듈 분류: 도메인 행위 모듈(A) / 순수 로직(B)
+- [ ] 1. 대상 모듈 분류: `./.claude/skills/`에서 대응 도메인 스킬 탐색 → 있으면 도메인 행위 모듈(A) / 없으면 순수 로직(B)
 - [ ] 2. (A인 경우) 대응 도메인 스킬을 domain-skill-reviewer로 신뢰도 확인 (선행 게이트)
 - [ ] 3. 단언 출처 수집: (A) scenario given/when/then·상태 전이·핵심 제약 / (B) 시그니처·JSDoc·불변식
 - [ ] 4. 배치 경로 결정: test/가 src/를 미러링
 - [ ] 5. 환경 선택: 순수 로직·스토어=node / RTL=jsdom + 공용 하니스
 - [ ] 6. 테스트 작성 (각 케이스에 근거 주석)
-- [ ] 7. npx vitest run <파일>로 통과 확인 (validate-fix-repeat)
-- [ ] 8. 실패 시 스펙-구현 정합성 판정 후 보고 (단언을 무르게 고치지 않기)
+- [ ] 7. nullish/무효 입력 경계 케이스 포함: null·undefined·빈 배열·누락 필드에 throw인지 안전처리인지
+        계약·스킬에서 유도해 단언 / 검증 함수는 유효·무효 입력 둘 다(parse throw·safeParse success:false),
+        에러 문자열 정확 일치는 최소화
+- [ ] 8. npx vitest run <파일>로 통과 확인 (validate-fix-repeat)
+- [ ] 9. 실패 시 스펙-구현 정합성 판정 후 보고 (단언을 무르게 고치지 않기)
 ```
 
 ---
@@ -158,7 +200,8 @@ src/entities/workflow/workflow/node-validator.ts
 - 단언은 항상 **명세(스킬) 또는 계약**에서 유도한다. 구현 코드를 그대로 베끼지
   않는다(change-detector 금지).
 - 스킬 기반 테스트 전에는 **스킬 신뢰도를 먼저** 확인한다(낡은 스킬 = 낡은 테스트).
+- **성공 입력만 박제하지 않는다.** nullish·빈·누락 입력의 방어 동작(throw인지 안전
+  처리인지)과 검증 함수의 무효 입력(parse throw·safeParse `success:false`)을 계약·
+  스킬에서 유도해 함께 단언한다.
 - 통과 확인 없이 완료로 보지 않는다. 실패는 판정 대상이지 통과시켜야 할 방해물이
   아니다.
-  </content>
-  </invoke>
