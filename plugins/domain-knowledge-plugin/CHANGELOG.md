@@ -1,5 +1,9 @@
 # Changelog — domain-knowledge-plugin
 
+## [1.2.2] - 2026-09-14
+
+CHANGELOG 정합성 정리(1.2.1 항목 기록 커밋에서 pre-commit 훅이 자동 상승한 분). 플러그인 동작 변경 없음.
+
 ## [1.2.1] - 2026-09-14
 
 - 서브에이전트 `domain-skill-manager`·`domain-skill-reviewer` 모델을 `opus`로 상향(토큰 여유 반영).
