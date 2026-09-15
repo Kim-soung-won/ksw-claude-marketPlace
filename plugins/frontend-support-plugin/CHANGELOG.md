@@ -1,5 +1,25 @@
 # Changelog — frontend-support-plugin
 
+## [1.6.0] - 2026-09-15
+
+### 에이전트
+- `integration-test-writer`(보강) — 워크플로에 **2단계 "렌더 경계 점검"** 신설(테스트 작성 직전,
+  소프트 보고). jsdom이 못 그리는 leaf(canvas 차트·가상 스크롤·파일 DnD·포털 등)를 조용히
+  축소하지 않고 폴리필→하니스 목 컨텍스트→leaf stub→정직한 축소→E2E 이관 사다리로 대응하거나
+  축소 사유를 명시하도록 동작 원칙 추가.
+
+### 리소스
+- `integration-test-writer/rendering-boundaries.md`(신설) — 렌더 경계 대응 사다리와 전략별 카탈로그
+  (ResizeObserver·IntersectionObserver·matchMedia·scrollIntoView·createObjectURL 폴리필,
+  react-virtuoso `VirtuosoMockContext`, ECharts/미디어 leaf stub, getBoundingClientRect·portal·
+  framer-motion·react-dropzone·SSE 함정). 폴리필·하니스는 프로젝트 인프라이고 이 리소스는 레시피만
+  나른다는 경계 명시.
+
+### 스킬
+- `integration-test-authoring`(보강) — 원칙 1에 "네트워크 경계 vs 렌더 경계" 구분 문단 추가. 네트워크
+  경계는 MSW로만(클라이언트 목 금지), 렌더 경계는 leaf 시각화만 stub하되 데이터 흐름은 실제 유지하고
+  픽셀·위치는 E2E로. 구체 절차·카탈로그는 `rendering-boundaries.md`로 링크.
+
 ## [1.5.0] - 2026-09-14
 
 ### 에이전트
