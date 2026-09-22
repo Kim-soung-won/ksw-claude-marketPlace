@@ -9,7 +9,9 @@
 ## 🔍 테스트 신뢰도 감사 결과
 
 **대상**: {검토한 파일/디렉토리 — Focused | test/ 전체 — Full Scan}
-**판정**: {PASS / 개선 필요}
+**판정**: {PASS / 검토 준비 / 개선 필요 / 차단}
+**모드·승인 상태**: {verify / spec-first, 승인 범위}
+**실행 분류**: {PASS / EXPECTED_RED / SPEC_CONFLICT / CHARACTERIZATION / BLOCKED / REGRESSION와 근거}
 
 ### 🔴 CRITICAL ({n}건)
 | 테스트 위치 | 문제 | 근거(어긋난 규약/명세) | 위임 수정 방향 |
@@ -35,5 +37,6 @@
 - {도메인 스킬 신뢰도 의심 시: "해당 도메인 스킬은 domain-skill-reviewer 선행 점검 권고"}
 ```
 
-- 이슈가 하나도 없으면 각 등급 표는 "없음"으로 표기하고 판정은 PASS로 한다.
+- 이슈가 없으면 등급 표는 "없음"으로 표기한다. verify가 실제 통과하면 PASS,
+  spec-first의 유효 RED는 검토 준비로 판정한다. 감사 PASS는 개발자의 명세 승인이 아니다.
 - 실제 통과 여부((e))는 `npx vitest run` 결과를 근거로 기재하고, 추측으로 채우지 않는다.

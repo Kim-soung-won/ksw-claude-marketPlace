@@ -67,10 +67,12 @@ Claude Code가 이 플러그인의 실제 설치 경로로 자동 치환한다.
 
 ### 0단계 — 규약·기준 로드 + 범위 확정
 1. `test-authoring/SKILL.md`와 `audit-checklist.md`를 Read로 읽는다.
+   통합 테스트를 검토하면 `integration-test-authoring/SKILL.md`도 읽고 실제 내부 연결과
+   HTTP 경계, 렌더 축소 범위를 확인한다.
 2. 검토 범위(Focused/Full Scan)를 결정한다.
 ```bash
 git rev-parse --show-toplevel
-find "$(git rev-parse --show-toplevel)/test" -name "*.test.ts" | sort
+rg --files test -g "*.test.ts" -g "*.test.tsx"
 ```
 테스트 파일이 하나도 없으면 즉시 종료하고 그 사실을 알린다.
 
@@ -82,7 +84,7 @@ find "$(git rev-parse --show-toplevel)/test" -name "*.test.ts" | sort
 - **(b) 구현 결합** — 에러 문자열 정확 일치 등 깨지기 쉬운 구현 결합 단언이 있는가.
 - **(c) 불변식 누락** — 상태 일관성 등 지켜야 할 불변식 단언이 빠졌는가.
 - **(d) 경로·명명** — `test/`가 `src/`를 미러링하는 경로·명명 규약을 지켰는가.
-- **(e) 실제 통과** — 지금 실제로 통과하는가.
+- **(e) 실행 판정** — 생명주기 모드에 맞는 실제 실행 증거가 있는가. 유효 RED와 환경 오류를 구분한다.
   ```bash
   npx vitest run <대상 test 파일>
   ```
@@ -93,8 +95,8 @@ find "$(git rev-parse --show-toplevel)/test" -name "*.test.ts" | sort
 
 ### 2단계 — 우선순위 분류 + 리포트 출력
 수집한 이슈를 `audit-checklist.md`의 등급 기준으로 CRITICAL/WARNING/INFO로 분류하고,
-`review-output-format.md`를 Read로 읽어 그 형식 그대로 출력한다. 이슈가 없으면 판정
-PASS로 출력한다.
+`review-output-format.md`를 Read로 읽어 그 형식 그대로 출력한다. 판정은 모드별
+실행 증거에 따라 출력하며 유효 RED의 검토 준비를 기능 구현 PASS로 바꾸지 않는다.
 
 ---
 
