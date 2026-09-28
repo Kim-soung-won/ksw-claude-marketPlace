@@ -1,6 +1,6 @@
 {
   "name": "claude-skill-creator",
-  "description": "Claude Code용 스킬과 참조 자료를 작성·수정한다.",
+  "description": "Claude Code의 SKILL.md 기반 범용 skill(참조 지침·작업 절차·번들 스크립트)을 공식 문서 규격에 맞게 새로 만들거나, 기존 skill의 frontmatter(allowed-tools, disable-model-invocation, context: fork, arguments 등)를 검토·수정하는 에이전트. \"skill 만들어줘\", \"SKILL.md 추가해줘\", \".claude/skills에 스킬 추가해줘\", \"이 플러그인에 skill 추가해줘\" 요청 시 호출한다. 도메인 지식(API 스펙·시나리오·타입)을 기록하는 domain-skill-manager와는 대상이 다르다.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/claude-skill-creator.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/claude-skill-creator/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

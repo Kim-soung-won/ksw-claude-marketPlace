@@ -5,17 +5,8 @@ description: 캡처된 커밋 세션 큐를 요약하고 에이전트 사용 피
 
 # session-feedback
 
-이 파일 기준 `../..`가 플러그인 루트다. Codex에서는 먼저
-[실행 연결 규칙](../../codex/runtime.md)을 읽는다. Claude Code에서는 기존 네이티브
-에이전트를 사용할 수 있다. 아래에서 요청에 맞는 업무 하나를 선택한다.
+업무 절차의 원본은 [session-feedback-summarizer 절차](../../resources/session-feedback-summarizer/procedure.md)다.
 
-| 업무 | 원본 절차 |
-|---|---|
-| 캡처된 커밋 세션을 digest로 전처리하고 근거 기반 사용 피드백을 기록한다. | [session-feedback-summarizer](../../agents/session-feedback-summarizer.md) |
-
-등록된 해당 에이전트와 위임 도구가 있으면 입력·범위·출력 형식을 전달해 위임한다.
-없으면 선택한 원본을 읽고 같은 절차를 현재 에이전트가 수행한다. YAML frontmatter는
-업무 설명이며 호스트 설정으로 실행하지 않는다. 결과는 원본의 지정 형식을 따른다.
-
-Codex 세션은 digest의 측정 한계를 함께 보고한다. 로컬 요약 요청만으로 서버 전송과
-전송 성공분 삭제를 수행하지 않는다. 해당 동작이 요청된 경우에만 전송 단계를 실행한다.
+session-feedback-summarizer 에이전트가 등록되어 있고 위임 도구를 쓸 수 있으면 요청 범위(현재
+프로젝트/전체 큐)와 서버 전송 요청 여부를 전달해 위임하고, 반환된 보고를 그대로 전달한다.
+에이전트를 쓸 수 없으면 위 절차 문서를 읽고 현재 에이전트가 같은 절차를 직접 수행한다.

@@ -50,7 +50,7 @@
   - npm: `npm i -D msw @testing-library/react @testing-library/user-event jsdom`
 - **설치는 side-effect이므로 이 에이전트가 임의로 실행하지 않는다.** 최종 요약에
   "이 의존성이 없어 진행 불가 — 아래 명령으로 설치 후 재요청" 형태의 **차단 보고**로
-  담는다. (AskUserQuestion은 서브에이전트에서 동작하지 않으므로 요약 텍스트로 되묻는다.)
+  담는다. (하위 에이전트는 사용자에게 직접 질문하지 못할 수 있으므로 요약 텍스트로 되묻는다.)
 - **MSW 환경 세팅**: MSW는 노드/브라우저에 따라 세팅이 다르다(`setupServer` vs
   `setupWorker`). vitest(node/jsdom) 통합 테스트는 `msw/node`의 `setupServer`를 쓴다는
   점을 안내한다. 세팅 파일(`setupFiles`)에 서버 lifecycle(`beforeAll listen` /

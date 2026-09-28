@@ -7,7 +7,6 @@ description: 문서·Swagger와 기존 코드를 대조해 신규 또는 구현 
 
 이 스킬은 도메인 지식을 실행 가능한 스키마·타입·서비스·Entity로 연결한다.
 신규 도메인뿐 아니라 기존 기능의 계약 조사·재사용·누락 보강에도 사용한다.
-Codex에서는 [실행 연결 규칙](../../codex/runtime.md)을 적용한다.
 
 작업 시작 시 [계약 준비 절차](../../resources/domain-contracts/preparation.md)를 읽는다.
 지식 기록은 [domain-knowledge](../domain-knowledge/SKILL.md)의 관리자 절차,

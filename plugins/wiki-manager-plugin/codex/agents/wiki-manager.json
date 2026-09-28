@@ -1,6 +1,6 @@
 {
   "name": "wiki-manager",
-  "description": "Obsidian vault에 지식을 캡처하고 기존 노트의 위키링크를 연결한다.",
+  "description": "~/agent-knowledge-base Obsidian vault의 노트 캡처와 위키링크 연계를 전담하는 에이전트. 작업 중 새로 알게 된 기술·개념·트러블슈팅을 노트로 남길 때(\"이거 기록해줘\", \"vault에 캡처해줘\", \"학습 노트로 남겨줘\"), 또는 위키링크 없는 고립 노트를 연관 노트로 연결할 때 (\"위키링크 없는 노트 찾아줘\", \"Related Notes 추가해줘\", \"vault 링크 그래프 점검해줘\") 호출한다. 나중에 다시 찾아볼 가치가 있는 사실을 알게 되면 명시적 요청이 없어도 vault 캡처를 먼저 제안한다.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/wiki-manager.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/wiki-manager/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

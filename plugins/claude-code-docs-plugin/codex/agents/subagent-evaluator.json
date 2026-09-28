@@ -1,6 +1,6 @@
 {
   "name": "subagent-evaluator",
-  "description": "Claude Code용 서브에이전트 정의의 규격과 위임 경계를 감사한다.",
+  "description": "기존 Claude Code subagent 정의(.md)가 공식 스펙과 작성 모범 사례를 얼마나 충족하는지 진단하는 에이전트. subagent-creator가 \"만들고 고치는\" 역할이면 이쪽은 \"이미 있는 걸 의심하는\" 역할이다 — 파일을 직접 수정하지 않고 우선순위(CRITICAL/WARNING/SUGGESTION) 리포트와 개선 계획만 반환하며, 사용자가 수정을 요청할 때만 그 계획을 subagent-creator에 위임한다. \"이 subagent 평가해줘\", \"agent.md 문제 있어?\", \"에이전트들 전체 점검해줘\" 요청 시 호출한다. 단, \"검토·점검\"이라도 **무게·컨텍스트 비용·격리 값어치·실사용** 축(정의가 과한지/무거운지, 스킬로 바꿔야 하는지)이면 이쪽이 아니라 `subagent-cost-auditor` 소관이다.",
   "sandbox_mode": "read-only",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/subagent-evaluator.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/subagent-evaluator/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

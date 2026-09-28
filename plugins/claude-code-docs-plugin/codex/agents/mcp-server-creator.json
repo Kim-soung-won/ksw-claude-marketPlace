@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-creator",
-  "description": "Claude Code에 연결할 MCP 서버·설정을 작성하거나 진단한다.",
+  "description": "Claude Code에 MCP 서버(외부 도구·데이터 소스 커넥터)를 공식 스펙대로 새로 연결·구성하거나 기존 서버 설정을 수정하는 에이전트. \"MCP 서버 붙여줘/추가해줘/연결해줘\", \"이 플러그인에 MCP 서버 번들해줘\", \"Sentry/Notion/GitHub/Postgres MCP 연결해줘\", \"stdio 서버 등록해줘\", \".mcp.json 만들어줘/고쳐줘\", \"plugin.json에 mcpServers 넣어줘\", \"MCP 서버 인증(OAuth) 설정해줘\", \"headersHelper로 토큰 헤더 붙여줘\", \"MCP 서버 스코프 project로 옮겨줘\", \"alwaysLoad로 Tool Search 연기에서 빼줘\", \"MCP 서버 타임아웃/출력 제한 조정해줘\"처럼 전송 방식(http/sse/stdio/ws) 선택, 스코프(local/project/user·플러그인 번들) 판단, 인증·환경변수 확장·`.mcp.json`/`plugin.json` mcpServers 블록 작성이 필요할 때 호출한다.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/mcp-server-creator.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/mcp-server-creator/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

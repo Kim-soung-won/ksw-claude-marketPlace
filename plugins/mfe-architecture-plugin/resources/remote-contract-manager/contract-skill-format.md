@@ -1,7 +1,7 @@
 # remote-contract-manager — Remote 계약 SKILL.md 포맷 규칙
 
-> 이 파일은 `agents/remote-contract-manager.md` 에서 분리된 정적 참고 자료다.
-> SKILL.md 작성 단계에 들어갔을 때만 Read 로 읽는다. 결과 리포트 형식은 같은 디렉터리의
+> 이 파일은 [remote-contract-manager 절차](procedure.md) 에서 분리된 정적 참고 자료다.
+> SKILL.md 작성 단계에 들어갔을 때만 읽는다. 결과 리포트 형식은 같은 디렉터리의
 > `result-output-format.md` 를 본다.
 
 문서화 대상은 **한 Remote 가 `exposes` 로 공개한 모듈 전체**다. 목표는 Host(소비) 쪽
@@ -19,6 +19,9 @@
 ```
 {소비 프로젝트 루트}/.claude/skills/{name}/SKILL.md
 ```
+
+위 경로와 아래 `MFE_{RemoteName}` 명명은 Claude Code 기준이다. Codex 등 다른 호스트의 위치·명명
+(`.agents/skills/mfe-{remote-name}/`)과 기존 스킬 보존 규칙은 [절차의 호스트별 규칙](procedure.md#호스트별-계약-스킬-위치와-명명)을 따른다.
 
 기본 저장처는 **Host(소비) 프로젝트**다. Remote 저장소에도 두고 싶다는 요청이 있으면
 양쪽에 같은 내용을 두되, 원본은 Host 쪽임을 body 상단에 한 줄로 밝힌다.

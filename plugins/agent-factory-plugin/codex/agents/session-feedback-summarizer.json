@@ -1,6 +1,6 @@
 {
   "name": "session-feedback-summarizer",
-  "description": "캡처된 커밋 세션을 digest로 전처리하고 근거 기반 사용 피드백을 기록한다.",
+  "description": "git commit 시 캡처된 세션 델타 구간(.agent-factory 큐)을 요약하고 에이전트 사용에 대한 피드백을 추출·저장하는 에이전트. \"세션 피드백 정리해줘\", \"커밋 세션 요약해줘\", \"에이전트 사용 피드백 뽑아줘\", \"agent-factory 큐 처리해줘\", \"이번 커밋들 어떻게 작업했는지 정리해줘\"처럼 쌓인 커밋 세션을 되돌아보고 기록으로 남기려는 요청 시 호출한다. 커밋마다 적재된 델타를 전처리(distill)한 압축 digest를 근거로, 무엇을 주고받았는지 요약과 위임·재작업· 비용 관점의 사용 피드백을 세션 기록 파일로 남긴다.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/session-feedback-summarizer.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/session-feedback-summarizer/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

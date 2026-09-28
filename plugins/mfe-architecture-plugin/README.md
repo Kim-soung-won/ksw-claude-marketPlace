@@ -17,14 +17,17 @@
 
 ```
 resources/mfe-config-architect/
+  procedure.md                ← 업무 절차 원본
   mf-config-reference.md      ← 규칙 원본(역할 구분·shared 정책·init 등록·노출 규약·통신·등급 기준)
   review-output-format.md
 resources/remote-contract-manager/
+  procedure.md                ← 업무 절차 원본
   contract-skill-format.md    ← 계약 SKILL.md 포맷 규칙
   result-output-format.md
 ```
 
-에이전트 본문은 라우팅만 담고, 규칙 원본과 출력 형식은 위 리소스에서 필요한 시점에 Read 한다.
+각 에이전트의 업무 절차 원본은 `resources/<agent>/procedure.md` 다(Claude 에이전트 본문·Codex 에이전트·
+`mfe-workflows` 스킬이 모두 이 문서를 읽는다). 규칙 원본과 출력 형식은 위 리소스에서 필요한 시점에 읽는다.
 
 ## 쓰는 순서
 

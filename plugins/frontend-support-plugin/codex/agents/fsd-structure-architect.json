@@ -1,6 +1,6 @@
 {
   "name": "fsd-structure-architect",
-  "description": "팀 FSD 규칙에 맞게 프론트엔드 구조를 생성하거나 검토한다.",
+  "description": "프론트엔드 프로젝트에서 폴더·아키텍처를 정해진 '디자인 패턴'(우리 팀 표준 = Feature-Sliced Design, FSD)대로 새로 생성(scaffold)하거나, 기존 구조가 그 패턴을 따르는지 검토·수정할 때 호출한다. 사용자가 \"FSD\"라는 전문 용어를 쓰지 않아도, 프론트엔드 폴더·구조·아키텍처를 두고 \"디자인 패턴대로 잡아줘\", \"아키텍처 패턴 맞춰줘\", \"폴더 구조 패턴대로 만들어줘\", \"프론트엔드 구조 디자인 패턴 적용해줘\"처럼 요청하면 이 에이전트를 호출한다. 그 밖의 트리거 예: \"FSD 구조/폴더 만들어줘\", \"feature-sliced로 구조 짜줘\", \"이 구조 FSD에 맞아?\", \"레이어 위반 확인해줘\", \"슬라이스 구조 봐줘\", \"레이어 의존성(import) 방향 잘못됐는지 봐줘\", \"public API(배럴 index.ts) 빠졌는지 봐줘\", \"shared/api·entities·features·pages 계층 잡아줘/검토해줘\". FSD 특유의 용어(layer·slice, shared/api·entities·features·pages, 메뉴그룹 폴더, public API 배럴)가 등장하는 구조 작업이면 명시적으로 \"FSD\"라고 말하지 않아도 호출한다. 우리 팀은 4계층 하우스 스타일(정통 FSD 의 app·widgets·processes 미사용, 세그먼트 폴더 대신 파일 접미사)을 쓴다 — 규칙 원본은 fsd-reference.md.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/fsd-structure-architect.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/fsd-structure-architect/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

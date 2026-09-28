@@ -11,7 +11,6 @@ description: 신규·기존 도메인의 UI 기능을 테스트 자체로 명세
 
 시작할 때 [단계와 전환 조건](../../resources/domain-ui-tdd/workflow.md)을 읽는다.
 검토·재개·최종 보고에는 [작업 기록 형식](../../resources/domain-ui-tdd/work-record.md)을 읽는다.
-Codex에서는 [실행 연결 규칙](../../codex/runtime.md)을 적용한다.
 
 ## 진입과 실행 연결
 
@@ -30,10 +29,10 @@ Codex에서는 [실행 연결 규칙](../../codex/runtime.md)을 적용한다.
 5. 승인된 테스트를 유지하면서 기능별로 GREEN을 만들고 리팩터링·회귀 검증한다.
    명세화만 요청했다면 구현을 시작하지 않는다.
 
-테스트 작성은 [test-writer](../../agents/test-writer.md),
-[integration-test-writer](../../agents/integration-test-writer.md), 감사는
-[test-reviewer](../../agents/test-reviewer.md)의 절차를 사용한다. 등록과 위임 기능이 모두 있는 경우에만 위임하며, 없으면 해당
-원본을 읽고 직접 수행한다. 전달 입력은 대상 기능·모드·근거·기존 실패·쓰기 범위·
+테스트 작성은 [test-writer](../../resources/test-writer/procedure.md),
+[integration-test-writer](../../resources/integration-test-writer/procedure.md), 감사는
+[test-reviewer](../../resources/test-reviewer/procedure.md)의 절차를 사용한다. 해당 에이전트가 등록되어 있고
+위임 도구를 쓸 수 있는 경우에만 위임하며, 없으면 해당 절차 문서를 읽고 직접 수행한다. 전달 입력은 대상 기능·모드·근거·기존 실패·쓰기 범위·
 작업 기록 경로다. 테스트 작성자에게 기능 구현이나 승인 판정을 맡기지 않는다.
 
 UI 구현 시 [FSD 원본](../../resources/fsd-structure-architect/fsd-reference.md),

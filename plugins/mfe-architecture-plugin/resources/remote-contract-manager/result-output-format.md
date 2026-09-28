@@ -10,7 +10,7 @@
 ## Remote 계약 문서 {생성|갱신}
 
 **대상 Remote**: `{RemoteName}` (`{remote 저장소 경로}`)
-**저장 위치**: `{PROJECT_ROOT}/.claude/skills/MFE_{RemoteName}/SKILL.md`
+**저장 위치**: `{실제 저장 경로}` (예: Claude Code `{PROJECT_ROOT}/.claude/skills/MFE_{RemoteName}/SKILL.md`, Codex `{PROJECT_ROOT}/.agents/skills/mfe-{remote-name}/SKILL.md`)
 **기준 커밋**: `{짧은 해시}` / 확인 날짜: {YYYY-MM-DD}
 
 ### 문서화한 노출 모듈 ({n}개)

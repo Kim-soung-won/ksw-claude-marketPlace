@@ -1,7 +1,7 @@
 # domain-skill-manager — 결과 리포트 형식
 
-> 이 파일은 `agents/domain-skill-manager.md`에서 분리된 정적 참고 자료다.
-> 5단계(자가 검증 후 결과 리포트)에서 최종 결과를 출력하기 직전에 Read로 읽고
+> 이 파일은 같은 디렉터리의 `procedure.md`에서 분리된 정적 참고 자료다.
+> 5단계(자가 검증 후 결과 리포트)에서 최종 결과를 출력하기 직전에 읽고
 > 아래 형식 그대로 출력한다. SKILL.md 작성 포맷 규칙 자체는 같은 디렉터리의
 > `skill-md-format-rules.md`를 참고한다.
 

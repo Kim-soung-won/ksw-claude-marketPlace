@@ -1,6 +1,6 @@
 {
   "name": "component-skill-manager",
-  "description": "공용 React 컴포넌트의 props·설계 의도·사용 제약을 프로젝트 스킬로 기록한다.",
+  "description": "@we/ai-template 같은 공용 React 컴포넌트 라이브러리의 컴포넌트를 실제 소스(.tsx)에서 props·타입·export를 추출해 SKILL.md로 문서화하는 에이전트. \"컴포넌트 스킬 만들어줘\", \"@we/ai-template의 X 컴포넌트 문서화해줘\" 요청이나, 라이브러리 버전업으로 prop·타입이 바뀐 기존 컴포넌트 스킬을 갱신할 때 호출한다. 협업자에게 받은 도메인 API 스펙·시나리오를 기록하는 domain-skill-manager와는 대상이 다르다 — API 스펙 요청이면 그쪽을 쓴다.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/component-skill-manager.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/component-skill-manager/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

@@ -1,6 +1,6 @@
 {
   "name": "remote-contract-manager",
-  "description": "Remote의 실제 exposes와 props를 조사해 소비 프로젝트의 계약 스킬을 기록한다.",
+  "description": "마이크로 프론트엔드에서 한 Remote 모듈이 외부로 공개한 계약(노출 키·props·전제·파급)을 SKILL.md로 기록하거나, 기록된 계약이 실제 소스와 어긋났는지 감사하는 에이전트. 트리거 예: \"이 remote가 뭘 노출하는지 정리해줘\", \"exposes 목록 문서로 남겨줘\", \"리모트 계약 문서 만들어줘\", \"MFE 모듈 인터페이스 정리해줘\", \"host에서 뭘 loadRemote할 수 있는지 알려줘\", \"노출 컴포넌트 props 정리해줘\", \"remote 계약 최신인지 봐줘\", \"exposes 바뀐 거 문서에 반영해줘\", \"MFE_Agent 스킬 갱신해줘\". Remote 저장소의 src/export/·rsbuild.config.ts의 exposes 블록이 바뀌었거나, Host 개발자가 원격 모듈을 가져다 쓰기 전 무엇을 줄 수 있는지 확인해야 할 때 호출한다. 포맷 규칙 원본은 contract-skill-format.md.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/remote-contract-manager.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/remote-contract-manager/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

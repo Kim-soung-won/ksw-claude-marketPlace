@@ -1,5 +1,17 @@
 # Changelog — domain-knowledge-plugin
 
+## [1.4.0] - 2026-09-28
+
+### 변경
+- domain-skill-manager·domain-skill-reviewer 업무 절차를 호스트 중립 원본
+  `resources/<agent>/procedure.md`로 옮겼다. Claude 에이전트 본문, Codex 에이전트,
+  `domain-knowledge` 스킬이 모두 이 문서를 직접 읽는다.
+- 호스트별 출력 위치(Claude Code `.claude/skills/`, Codex `.agents/skills/`)와 Codex 명명·도메인 기록·
+  공통 관심사 위치 규칙을 절차 문서에 통합했다. 기존 스킬은 두 위치를 모두 탐색한다.
+- Codex 에이전트 템플릿(`codex/agents/*.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- Codex가 Claude 정의를 번역해 읽을 필요가 없어져 `codex/runtime.md`를 삭제했다.
+
 ## [1.3.0] - 2026-09-22
 
 - 도메인 리뷰에 테스트 존재·명세 연결 검사와 현황 표 추가. 기존 기능의 누락, 선작성 예정, 비활성 골격, 확인 불가를 구분하며 실행 통과와 분리해 보고.

@@ -1,5 +1,16 @@
 # Changelog — ui-template-manage-plugin
 
+## [1.2.0] - 2026-09-28
+
+### 변경
+- component-skill-manager 업무 절차를 호스트 중립 원본 `resources/component-skill-manager/procedure.md`로
+  옮겼다. Claude 에이전트 본문, Codex 에이전트, `component-documentation` 스킬이 모두 이 문서를 직접 읽는다.
+- 호스트별 출력 위치(Claude Code `.claude/skills/`, Codex `.agents/skills/`)와 Codex 명명 규칙을
+  절차 문서에 통합했다. 기존 스킬은 두 위치를 모두 탐색하고 자동 이동하지 않는다.
+- Codex 에이전트 템플릿(`codex/agents/component-skill-manager.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- Codex가 Claude 정의를 번역해 읽을 필요가 없어져 `codex/runtime.md`를 삭제했다.
+
 ## [1.1.3] - 2026-09-28
 
 - Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.

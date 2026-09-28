@@ -50,8 +50,8 @@ wiki-manager는 하위 에이전트라서 **이 대화 기록을 보지 못한�
    - 에이전트가 첨언한 보완/토론 내용이 있으면, 원본과 구분되도록 `> [!INFO] 심화 보완`
      콜아웃으로 분리해달라고 위임 프롬프트에 명시한다(기존 노트들과 동일한 패턴).
    - wiki-manager가 등록되어 있지 않거나 위임 도구가 없으면(예: Codex에서 에이전트 미설치)
-     [실행 연결 규칙](../../codex/runtime.md)을 읽은 뒤 [wiki-manager 절차](../../agents/wiki-manager.md)를
-     현재 에이전트가 직접 수행한다.
+     [wiki-manager 절차](../../resources/wiki-manager/procedure.md)를 읽고 현재 에이전트가
+     직접 수행한다.
 
 4. **보고**: 생성된 노트 경로와 연결한 위키링크 목록을 사용자에게 전달한다.
    저장은 `_inbox/`까지이며, 최종 폴더 이동·status 상향은 vault 룰상 사람이 검토 후 별도로

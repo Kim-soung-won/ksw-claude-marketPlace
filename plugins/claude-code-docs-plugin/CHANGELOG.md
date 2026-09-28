@@ -1,5 +1,17 @@
 # Changelog — claude-code-docs-plugin
 
+## [0.5.0] - 2026-09-28
+
+### 변경
+- 6개 에이전트(claude-skill-creator, hook-manager, mcp-server-creator, subagent-cost-auditor,
+  subagent-creator, subagent-evaluator)의 업무 절차를 호스트 중립 원본
+  `resources/<agent>/procedure.md`로 옮겼다. Claude 에이전트 본문, Codex 에이전트,
+  `claude-maintenance` 스킬이 모두 이 문서를 직접 읽는다.
+- Codex 에이전트 템플릿(`codex/agents/*.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- 이 플러그인의 호스트 적용 규칙(대상 규격은 Claude Code 그대로 유지 등)을 각 절차의
+  "호스트 참고" 절로 옮기고 `codex/runtime.md`를 삭제했다.
+
 ## [0.4.0] - 2026-09-10
 
 - Codex 카탈로그와 공통 스킬 배포 지원.

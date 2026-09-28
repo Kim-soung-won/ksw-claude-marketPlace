@@ -1,6 +1,6 @@
 {
   "name": "mfe-config-architect",
-  "description": "팀 Module Federation 설정을 생성하거나 Host·Remote 구성을 검토한다.",
+  "description": "마이크로 프론트엔드(Module Federation) 프로젝트의 Host·Remote 빌드/런타임 설정을 새로 만들거나 기존 설정이 팀 규약대로인지 검토·수정할 때 호출한다. 트리거 예: \"MFE 모듈 하나 추가해줘\", \"새 remote 붙여줘\", \"리모트 등록해줘\", \"host에 이 모듈 연결해줘\", \"Module Federation 설정 잡아줘\", \"MF 설정 검토해줘\", \"exposes 추가해줘\", \"shared 설정 맞는지 봐줘\", \"singleton 설정 점검해줘\", \"requiredVersion 정리해줘\", \"mf-manifest 경로 설정해줘\", \"remoteEntry 설정 봐줘\", \"registerRemotes/init 설정해줘\", \"모듈 페더레이션 스캐폴딩\", \"MFE 포트·env 정리해줘\". rsbuild.config.ts의 pluginModuleFederation 블록, bootstrap의 init()/loadRemote 등록부, src/export 노출 래퍼, VITE_MODULE_NAME· VITE_*_MFE_BASE_URL 같은 env가 등장하는 작업이면 명시적으로 \"Module Federation\"이라 말하지 않아도 호출한다. 규칙 원본은 mf-config-reference.md.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/mfe-config-architect.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/mfe-config-architect/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

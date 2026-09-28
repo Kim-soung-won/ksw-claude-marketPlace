@@ -1,5 +1,18 @@
 # Changelog — mfe-architecture-plugin
 
+## [0.5.0] - 2026-09-28
+
+### 변경
+- `mfe-config-architect`·`remote-contract-manager` 업무 절차를 호스트 중립 원본
+  `resources/<agent>/procedure.md`로 옮겼다. Claude 에이전트 본문, Codex 에이전트,
+  `mfe-workflows` 스킬이 모두 이 문서를 직접 읽는다.
+- 계약 스킬의 호스트별 위치·명명(Claude Code `.claude/skills/MFE_{RemoteName}`, Codex
+  `.agents/skills/mfe-{remote-name}`)과 실제 모듈 이름·`loadRemote` 접두사 보존, 기존 스킬 이름·
+  사용자 지정 위치 보존 규칙을 `remote-contract-manager` 절차에 명시했다.
+- Codex 에이전트 템플릿(`codex/agents/*.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- Codex가 Claude 정의를 번역해 읽을 필요가 없어져 `codex/runtime.md`를 삭제했다.
+
 ## [0.4.3] - 2026-09-28
 
 - Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.

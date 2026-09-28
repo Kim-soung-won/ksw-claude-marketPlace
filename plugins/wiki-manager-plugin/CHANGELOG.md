@@ -1,5 +1,19 @@
 # Changelog — wiki-manager-plugin
 
+## [2.1.0] - 2026-09-28
+
+### 변경
+- wiki-manager 업무 절차를 호스트 중립 원본 `resources/wiki-manager/procedure.md`로 옮겼다.
+  Claude 에이전트 본문, Codex 에이전트, `wiki-knowledge`·`wiki-ingest` 스킬(에이전트 미사용 시)이
+  모두 이 문서를 직접 읽는다. 에이전트 본문의 설계 배경은 절차의 「설계 메모」로 옮겼다.
+- Codex 전용 규칙(`KB_VAULT_PATH` 우선, 설정 env 임의 추가 금지, 실제 쓰기 권한 범위 준수,
+  대화 캡처는 메인 에이전트 추출 후 위임, 이미 받은 입력 재질문 금지)을 절차 본문에 합쳤다.
+  vault 경로 우선순위를 스킬과 같은 "지정 경로 → `KB_VAULT_PATH` → 기본값"으로 통일했다
+  (`project-classify.md` 포함).
+- Codex 에이전트 템플릿(`codex/agents/wiki-manager.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- Codex가 Claude 정의를 번역해 읽을 필요가 없어져 `codex/runtime.md`를 삭제했다.
+
 ## [2.0.0] - 2026-09-28
 
 ### 변경 (호환성 깨짐)

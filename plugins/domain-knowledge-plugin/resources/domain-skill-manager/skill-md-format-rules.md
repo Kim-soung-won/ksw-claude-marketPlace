@@ -1,7 +1,7 @@
 # domain-skill-manager — SKILL.md 포맷 규칙
 
-> 이 파일은 `agents/domain-skill-manager.md`에서 분리된 정적 참고 자료다.
-> 본문(워크플로 로직)과 분리해 4단계(SKILL.md 작성)에 진입했을 때만 Read로
+> 이 파일은 같은 디렉터리의 `procedure.md`에서 분리된 정적 참고 자료다.
+> 본문(워크플로 로직)과 분리해 4단계(SKILL.md 작성)에 진입했을 때만
 > 읽는다. 결과 리포트 출력 형식은 같은 디렉터리의 `result-output-format.md`를 참고한다.
 
 ---

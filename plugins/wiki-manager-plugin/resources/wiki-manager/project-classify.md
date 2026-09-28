@@ -4,8 +4,8 @@
 "어디서 커맨드를 쳤느냐"가 곧 분류이므로 수동 태깅이 필요 없다. 미등록 repo는 Project Map에
 **자동 추가**한 뒤 그 분류를 즉시 사용한다.
 
-vault 경로는 `~/agent-knowledge-base`(없으면 `$KB_VAULT_PATH`, 그래도 없으면 사용자에게
-질문)를 기준으로 한다. Project Map은 `<vault>/00 Meta/00.03 Project Map.md`.
+vault 경로는 사용자가 지정한 경로 → `$KB_VAULT_PATH` → 기본값 `~/agent-knowledge-base` 순으로
+정하고, 그래도 없으면 사용자에게 질문한다. Project Map은 `<vault>/00 Meta/00.03 Project Map.md`.
 
 ## 1. 세션 컨텍스트 감지
 

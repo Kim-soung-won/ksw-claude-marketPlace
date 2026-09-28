@@ -1,6 +1,6 @@
 {
   "name": "domain-skill-manager",
-  "description": "제공된 API·시나리오·도메인 규칙을 프로젝트 스킬로 기록·갱신한다.",
+  "description": "UI 개발자가 협업 개발자·기획자에게 받은 도메인 지식(API 스펙, 시나리오, 상태 타입 등)을 SKILL.md로 생성·수정하는 에이전트. 새 도메인 스킬 생성, 새 API 스펙 기록, 기존 SKILL.md 보완 요청 시 호출한다. 협업자가 Request/Response Body를 공유하며 화면 개발을 요청하면 명시적 \"스킬 만들어줘\" 요청이 없어도 선제 호출한다. 공용 컴포넌트 인터페이스(props/타입)를 문서화하는 component-skill-manager와는 대상이 다르다.",
   "sandbox_mode": "workspace-write",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/domain-skill-manager.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/domain-skill-manager/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

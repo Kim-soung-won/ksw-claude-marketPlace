@@ -1,6 +1,6 @@
 {
   "name": "c4-schema-reader",
-  "description": "C4 모델 JSON을 읽고 경고·구성·흐름·신뢰도 한계를 한국어로 브리핑한다.",
+  "description": "사용자가 이미 만들어 둔 아키텍처 다이어그램·시스템 구조도·서비스 구성도(=C4 Modelizer로 만든 C4 모델 JSON, schemaVersion 2 flat 스키마)를 공유하며 프로젝트 아키텍처를 읽어 파악·이해·설명해 달라고 할 때, 또는 후속 작업(코드 수정, 문서 작성, 리뷰) 전에 상위 에이전트가 대상 프로젝트의 아키텍처 컨텍스트를 먼저 확보해야 할 때 이 에이전트에 위임하라. 트리거 예시 - \"이 구조도 읽고 파악해줘\", \"아키텍처 다이어그램 설명해줘\", \"구성도 보고 서비스 어떻게 연결돼 있는지 정리해줘\", \"아키텍처 공유할게 이해해줘\", \"이 C4 JSON 읽고 구조 파악해줘\", \"stock-simulator-c4.json 기반으로 시스템 구성 설명해줘\". JSON 파일 경로를 알고 있으면 프롬프트에 포함해서 전달하라.",
   "sandbox_mode": "read-only",
-  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n먼저 `{{PLUGIN_ROOT}}/codex/runtime.md`를 읽는다.\n다음으로 `{{PLUGIN_ROOT}}/agents/c4-schema-reader.md`를 업무 절차로 읽고 해당 업무를 수행한다.\n원본 문서의 참조는 runtime.md의 경로·도구·제품별 적용 규칙에 따라 해석한다.\n요청 범위와 근거를 유지하고 원본이 지정한 최종 형식으로 반환한다."
+  "developer_instructions": "플러그인 위치: {{PLUGIN_ROOT}}\n`{{PLUGIN_ROOT}}/resources/c4-schema-reader/procedure.md`를 업무 절차 원본으로 읽고 그대로 수행한다.\n절차 안의 상대 경로는 그 문서 디렉터리 기준이다. 요청 범위와 현재 sandbox 권한을 넘는 변경을 하지 않는다.\n사용자에게 직접 물을 수 없으면 필요한 정보를 구체적으로 적어 메인 에이전트에 반환한다."
 }

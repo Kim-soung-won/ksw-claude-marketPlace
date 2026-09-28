@@ -1,5 +1,14 @@
 # Changelog — architecture-manage-plugin
 
+## [0.6.0] - 2026-09-28
+
+### 변경
+- c4-schema-reader 업무 절차를 호스트 중립 원본 `resources/c4-schema-reader/procedure.md`로 옮겼다.
+  Claude 에이전트 본문과 Codex 에이전트가 모두 이 문서를 직접 읽는다.
+- Codex 에이전트 템플릿(`codex/agents/c4-schema-reader.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- 스킬의 스키마 경로 규칙(`.claude/schema`)과 Codex용 `codex/runtime.md`는 그대로 유지한다.
+
 ## [0.5.2] - 2026-09-28
 
 - Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.

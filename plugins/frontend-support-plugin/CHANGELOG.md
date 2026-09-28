@@ -1,5 +1,18 @@
 # Changelog — frontend-support-plugin
 
+## [1.8.0] - 2026-09-28
+
+### 변경
+- `fsd-structure-architect`·`integration-test-writer`·`test-reviewer`·`test-writer` 업무 절차를
+  호스트 중립 원본 `resources/<agent>/procedure.md`로 옮겼다. Claude 에이전트 본문, Codex 에이전트,
+  `frontend-workflows`·`domain-ui-tdd` 스킬이 모두 이 문서를 직접 읽는다.
+- 도메인 명세 탐색 위치(Claude Code `.claude/skills/`, Codex `.agents/skills/`; 사용자 지정 우선,
+  존재하는 두 위치 모두 탐색)와 충돌 시 확인 규칙, 읽기 전용 감사에서 실행 불가 시 실행 미검증
+  보고 규칙을 절차 안에 명시했다.
+- Codex 에이전트 템플릿(`codex/agents/*.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- Codex가 Claude 정의를 번역해 읽을 필요가 없어져 `codex/runtime.md`를 삭제했다.
+
 ## [1.7.1] - 2026-09-28
 
 - Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.
