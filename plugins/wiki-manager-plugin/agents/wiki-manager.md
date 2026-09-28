@@ -106,6 +106,11 @@ provenance)를 붙이는 방식이다(2026-08-04, 사용자 선택 "Daily Note �
 `/log`를 쳤느냐"가 곧 분류가 되어 수동 태깅이 필요 없고, 프로젝트별 회수는 태그 검색·개요
 노트 백링크로 한다. Project Map에 없는 repo는 미분류로 남기고 표 추가를 pull 기반으로 제안한다.
 
+세 커맨드(`/log`·`/ingest`·`/new-project`)는 Claude Code·Codex 공통 원본으로 합치기 위해
+`wiki-log`·`wiki-ingest`·`wiki-new-project` 스킬로 통합했다(2026-09-28, plugin v2.0.0).
+`commands/`는 삭제했고, 명시적 호출 전용 제약은 Claude의 `disable-model-invocation`과
+Codex의 `agents/openai.yaml` `policy.allow_implicit_invocation: false`로 각각 건다.
+
 과거 스킬 시절의 미확인/추정 이력(참고용):
 
 - **캡처 스킬 기본 설계 (2026-07-02 생성, 사용자 미확인 상태로 채택)**: 스킬 생성 시

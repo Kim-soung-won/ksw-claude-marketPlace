@@ -1,5 +1,17 @@
 # Changelog — wiki-manager-plugin
 
+## [2.0.0] - 2026-09-28
+
+### 변경 (호환성 깨짐)
+- `commands/`(`/log`·`/ingest`·`/new-project`)를 삭제하고 절차 원본을 `wiki-log`·`wiki-ingest`·
+  `wiki-new-project` 스킬로 통합했다. Claude Code에서는 `/wiki-log`·`/wiki-ingest`·`/wiki-new-project`로
+  호출한다. Claude·Codex가 같은 SKILL.md 하나를 원본으로 읽는다.
+- 명시적 호출 전용 제약을 두 호스트에 모두 적용한다. Claude는 `disable-model-invocation: true`,
+  Codex는 스킬별 `agents/openai.yaml`의 `policy.allow_implicit_invocation: false`.
+  기존 공유 스킬 래퍼는 이 제약이 없어 양쪽에서 모델이 자동 호출할 수 있었다.
+- 스킬 본문의 `${CLAUDE_PLUGIN_ROOT}`·`AskUserQuestion` 전용 표기를 상대 경로·호스트 중립 표현으로 바꿨다.
+- Codex `shortDescription`을 잘리지 않는 요약문으로 교체했다.
+
 ## [1.3.0] - 2026-09-10
 
 - Codex 카탈로그와 공통 스킬 배포 지원.
