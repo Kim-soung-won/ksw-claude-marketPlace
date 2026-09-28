@@ -1,6 +1,6 @@
 {
   "name": "codex-docs-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Codex 설정·스킬·에이전트·플러그인·훅·MCP의 작성과 진단을 최신 OpenAI 공식 문서에 근거해 수행하는 플러그인",
   "author": {
     "name": "kimsoungwon"

@@ -1,6 +1,6 @@
 {
   "name": "module-federation-official-plugin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Module Federation 오픈소스 공식 올인원 스킬(한글화)을 재동기화 가능한 형태로 번들하는 플러그인 — 설정·shared·타입(dts)·런타임 에러 코드·모듈 정보·성능·통합을 서브커맨드로 라우팅한다. 업스트림 지식 계층으로, 팀 하우스 규칙(mfe-architecture-plugin)과 분리해 독립적으로 갱신한다",
   "author": {
     "name": "kimsoungwon"
@@ -8,7 +8,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Module Federation Official",
-    "shortDescription": "Module Federation 오픈소스 공식 올인원 스킬(한글화)을 재동기화 가능한 형태로 번들하는 플러그인 — ",
+    "shortDescription": "Module Federation 공식 mf 스킬(한글화) 번들",
     "longDescription": "Module Federation 오픈소스 공식 올인원 스킬(한글화)을 재동기화 가능한 형태로 번들하는 플러그인 — 설정·shared·타입(dts)·런타임 에러 코드·모듈 정보·성능·통합을 서브커맨드로 라우팅한다. 업스트림 지식 계층으로, 팀 하우스 규칙(mfe-architecture-plugin)과 분리해 독립적으로 갱신한다",
     "developerName": "kimsoungwon",
     "category": "Productivity",

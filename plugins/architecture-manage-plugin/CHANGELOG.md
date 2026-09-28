@@ -1,5 +1,10 @@
 # Changelog — architecture-manage-plugin
 
+## [0.5.2] - 2026-09-28
+
+- Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.
+- `c4-modeling` 스킬의 질문 규칙을 호스트 중립 표현(호스트의 질문 도구)으로 바꿨다.
+
 ## [0.5.1] - 2026-09-14
 
 ### 변경

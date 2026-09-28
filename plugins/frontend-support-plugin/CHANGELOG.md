@@ -1,5 +1,9 @@
 # Changelog — frontend-support-plugin
 
+## [1.7.1] - 2026-09-28
+
+- Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.
+
 ## [1.7.0] - 2026-09-22
 
 - `domain-ui-tdd` 절차형 하네스 추가: 기능별 진단, 테스트 명세화, 개발자 검토, GREEN·리팩터링·재개 기록.

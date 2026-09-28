@@ -1,5 +1,9 @@
 # Changelog — agent-factory-plugin
 
+## [0.15.1] - 2026-09-28
+
+- Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.
+
 ## [0.15.0] - 2026-09-10
 
 - Codex 카탈로그와 공통 스킬 배포 지원.

@@ -1,5 +1,9 @@
 # Changelog — mfe-architecture-plugin
 
+## [0.4.3] - 2026-09-28
+
+- Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.
+
 ## [0.4.2] - 2026-09-14
 
 CHANGELOG 정합성 정리(0.4.1 항목 기록 커밋에서 pre-commit 훅이 자동 상승한 분). 플러그인 동작 변경 없음.
