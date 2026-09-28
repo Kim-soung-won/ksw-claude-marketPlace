@@ -27,6 +27,7 @@ const TEST_GLOB = 'plugins/**/*.test.mjs';
 const STEPS = [
   ['Codex 설치 도구', [path.join(__dirname, 'test-install-codex-agents.py')], 'python3'],
   ['Codex 배포 정합성', [path.join(__dirname, 'validate-codex.js')]],
+  ['Codex 에이전트 생성물', [path.join(__dirname, 'generate-codex-agents.js'), '--check']],
   ['매니페스트 정합성', [path.join(__dirname, 'validate-manifests.js')]],
   ['에이전트 정의', [path.join(__dirname, 'validate-agents.js')]],
   ['스킬 정의', [path.join(__dirname, 'validate-skills.js')]],

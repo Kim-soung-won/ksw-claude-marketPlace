@@ -24,6 +24,7 @@ node scripts/validate-agents.js     # 개별
 | `validate-agents.js` | frontmatter 필수 필드(`name`·`description`), 파일명 = `name`, `model` 허용값(`haiku`/`sonnet`/`opus`/`inherit`), `description` 리터럴 블록 스칼라 금지, `tools` 미선언 경고 |
 | `validate-skills.js` | `SKILL.md` 존재·비어있지 않음, 디렉터리명 = `name`, `description` 규격 |
 | `validate-personal-paths.js` | `/Users/<name>`, `C:\Users\<name>` 하드코딩 검출 |
+| `generate-codex-agents.js --check` | `resources/<agent>/procedure.md`가 있는 에이전트의 `codex/agents/<agent>.json`이 Claude frontmatter에서 생성한 결과와 같은지. 다르면 인자 없이 실행해 재생성 |
 
 공용 모듈은 `lib/frontmatter.js`(YAML frontmatter 파서)와
 `lib/repo.js`(플러그인 순회·리포터)에 있다.

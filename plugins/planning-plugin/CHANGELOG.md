@@ -1,5 +1,14 @@
 # Changelog — planning-plugin
 
+## [0.3.0] - 2026-09-28
+
+### 변경
+- change-planner 업무 절차를 호스트 중립 원본 `resources/change-planner/procedure.md`로 옮겼다.
+  Claude 에이전트 본문, Codex 에이전트, `change-planning` 스킬이 모두 이 문서를 직접 읽는다.
+- Codex 에이전트 템플릿(`codex/agents/change-planner.json`)은 Claude frontmatter에서 생성한다
+  (`scripts/generate-codex-agents.js`). 설명·sandbox를 따로 손으로 쓰지 않는다.
+- Codex가 Claude 정의를 번역해 읽을 필요가 없어져 `codex/runtime.md`를 삭제했다.
+
 ## [0.2.1] - 2026-09-28
 
 - Codex `interface.shortDescription`이 글자 수로 잘려 단어 중간에서 끊기던 것을 요약문으로 교체했다.

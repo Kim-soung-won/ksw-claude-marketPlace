@@ -15,15 +15,17 @@ plugins/<plugin-name>/
   .codex-plugin/plugin.json           # Codex 매니페스트
   skills/<skill>/                     # 두 제품이 공유하는 스킬
   resources/<agent>/                 # 상세 절차·도메인 규칙·출력 형식
+    procedure.md                      # (이전 완료 에이전트) 호스트 중립 업무 절차 원본
   agents/<agent>.md                   # Claude 에이전트 진입점
-  codex/agents/<agent>.json           # Codex 등록 템플릿
-  codex/runtime.md                    # Codex 실행 시 호스트 차이
+  codex/agents/<agent>.json           # Codex 등록 템플릿 (procedure.md가 있으면 생성물)
+  codex/runtime.md                    # Codex 실행 시 호스트 차이 (미이전 플러그인만)
 ```
 
 - 배포 목록은 `README.md`와 두 카탈로그를 참고한다. 새 플러그인은 실제 스킬 진입점·리소스·필요한 실행 연결을 확인한 뒤 두 카탈로그와 두 매니페스트에 등록한다.
 - 공통 지식은 `skills/`, 상세 규칙과 출력 형식은 `resources/`에 둔다. 필요한 시점에 읽으며 등록 템플릿에 복제하지 않는다.
 - 공통 리소스의 상대 경로는 해당 문서 디렉터리 기준이다. 사용자명이나 개인 설치 경로를 하드코딩하지 않는다.
 - 제품별 도구 이름·모델·권한·가격 설명은 공통 업무 규칙과 분리한다. `codex/runtime.md`는 호스트 차이만 설명하고 원본 업무 규칙과 출력 형식을 복제하지 않는다.
+- 에이전트 업무 절차는 `resources/<agent>/procedure.md`에 호스트 중립으로 쓰고(상대 경로, 호스트 전용 도구명 금지), Claude 에이전트 본문과 공유 스킬은 이 문서를 가리키기만 한다. 이 경우 `codex/agents/<agent>.json`은 `node scripts/generate-codex-agents.js`로 Claude frontmatter에서 생성하며 직접 수정하지 않는다. 설명·권한은 Claude frontmatter 한 곳에서 고친다.
 
 ## 저술 원칙
 
