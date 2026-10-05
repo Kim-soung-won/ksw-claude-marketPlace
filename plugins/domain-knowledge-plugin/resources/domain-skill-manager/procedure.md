@@ -18,7 +18,7 @@ SKILL.md 작성 시 필요한 상세 포맷 규칙과 결과 리포트 형식은
 
 | 리소스 파일 | 내용 |
 |---|---|
-| [skill-md-format-rules.md](skill-md-format-rules.md) | SKILL.md의 frontmatter(`confidence` 섹션 작성 기준 포함), 타입별 `description` 작성 규칙(`_api`/`_domain`/`_scenario` 패턴), 바디 섹션 구조, HTTP method별 API 명세 필수 항목, 실패 흐름 작성 기준, 작성 지침 7가지, 자가 검증 체크리스트 |
+| [skill-md-format-rules.md](skill-md-format-rules.md) | SKILL.md의 frontmatter(`confidence` 섹션 작성 기준 포함), 타입별 `description` 작성 규칙(`_api`/`_domain`/`_scenario` 패턴), 바디 섹션 구조, `_domain` 필드 의미 작성 기준, `_scenario` 필드 의미 기반 화면 분기 기준, HTTP method별 API 명세 필수 항목, 실패 흐름 작성 기준, 작성 지침 7가지, 자가 검증 체크리스트 |
 | [result-output-format.md](result-output-format.md) | 작업 완료 후 사용자에게 보여줄 결과 리포트 형식 |
 
 ### 리소스를 언제 읽는지
@@ -160,6 +160,9 @@ git rev-parse --show-toplevel
 
 [추가 컨텍스트]
 {의사 결정 배경, 제약사항, 시나리오, 컴포넌트 구조 등 자유 형식}
+
+[필드 의미]  ← 상태·플래그·코드 값이 현실·시스템에서 뜻하는 바 (있으면)
+{필드: 값별 의미}
 
 [미확인 항목]  ← 확인이 필요한 내용 명시
 {확인이 필요한 항목과 이유}

@@ -121,6 +121,8 @@ find {SKILL_ROOTS} -name "SKILL.md" 2>/dev/null | sort
 | `## 핵심 제약사항` | 항상 필수 |
 | API 명세 + 에러 응답 | API가 있는 스킬에 필수. 없으면 `⚠️ unconfirmed` 표기 필요 |
 | 실패 흐름 | `_scenario` 스킬에 필수 |
+| `## 필드 의미` | `_domain` 스킬에 필수. 플래그·enum·nullable 필드가 있는데 값별 의미가 없거나 필드명을 되풀이만 하면 누락 |
+| `## 화면 분기 근거` | `_scenario`에서 필드 값에 따라 화면이 달라지는 서술이 있을 때 필수 |
 
 #### 2-C. `[[링크]]` 유효성
 
@@ -182,6 +184,7 @@ trio가 완성된 도메인에 한해 각 스킬이 자기 역할을 벗어난 �
 | `_api` | 도메인 불변조건·비즈니스 규칙을 직접 기술 | `## 핵심 제약사항` 섹션이 3줄 이상이고 `[[_domain]]` 링크 없는 경우 |
 | `_scenario` | API 경로·파라미터·Request/Response를 `[[도메인_api]]` 참조 없이 직접 기술 | `GET\|POST\|PUT\|PATCH\|DELETE` 패턴 존재 여부 확인 후 `[[_api]]` 링크 없으면 월경 |
 | `_scenario` | 타입 정의를 `[[도메인_domain]]` 참조 없이 직접 기술 | `type \|interface ` 존재 여부 확인 후 `[[_domain]]` 링크 없으면 월경 |
+| `_scenario` | 필드 값의 의미를 `[[도메인_domain]]` 필드 의미와 다르게 정의하거나, `_domain`에 없는 의미를 직접 정의 | `## 화면 분기 근거`의 의미 출처를 `_domain`의 `## 필드 의미`와 대조 |
 | `_domain` | API 경로·HTTP 메서드를 직접 기술 | `GET\|POST\|PUT\|PATCH\|DELETE` 패턴 존재 시 월경 |
 
 ```bash
@@ -276,6 +279,7 @@ Focused는 대상 기능과 연결된 명세 범위, Full Scan은 수집한 도�
 - body와 frontmatter의 `unconfirmed` 항목 불일치
 - API 경로가 코드에서 발견되지 않음 (경로 불일치 후보, 선작성의 미구현 예정 제외)
 - trio 역할 월경 (`_api`에 타입 직접 정의, `_scenario`에 API 스펙 직접 기술 등)
+- `_domain`의 `## 필드 의미` 누락, `_scenario`의 필드 값 분기에 `## 화면 분기 근거` 누락
 
 **INFO 분류 기준:**
 - 테스트 작성 전 단계의 미작성 예정, 테스트 탐색 한계 또는 미승인 특성화 동작

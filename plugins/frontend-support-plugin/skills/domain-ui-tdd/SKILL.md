@@ -35,6 +35,9 @@ description: 신규·기존 도메인의 UI 기능을 테스트 자체로 명세
 위임 도구를 쓸 수 있는 경우에만 위임하며, 없으면 해당 절차 문서를 읽고 직접 수행한다. 전달 입력은 대상 기능·모드·근거·기존 실패·쓰기 범위·
 작업 기록 경로다. 테스트 작성자에게 기능 구현이나 승인 판정을 맡기지 않는다.
 
+UI에서 필드 값에 따라 노출·활성·라벨·허용 동작이 달라지면 도메인 `_scenario`의 화면 분기 근거와
+`_domain`의 필드 의미를 따른다. 근거가 없는 분기는 구현에서 정하지 않고 개발자 검토 항목으로 남긴다.
+
 UI 구현 시 [FSD 원본](../../resources/fsd-structure-architect/fsd-reference.md),
 [컴포넌트 규칙](../component-design-patterns/SKILL.md)을 적용하고 필요한 경우
 [Suspense 규칙](../suspense-boundary-patterns/SKILL.md)을 읽는다.
