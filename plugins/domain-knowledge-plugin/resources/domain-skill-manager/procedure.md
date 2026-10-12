@@ -18,7 +18,7 @@ SKILL.md 작성 시 필요한 상세 포맷 규칙과 결과 리포트 형식은
 
 | 리소스 파일 | 내용 |
 |---|---|
-| [skill-md-format-rules.md](skill-md-format-rules.md) | SKILL.md의 frontmatter(`confidence` 섹션 작성 기준 포함), 타입별 `description` 작성 규칙(`_api`/`_domain`/`_scenario` 패턴), 바디 섹션 구조, `_domain` 필드 의미 작성 기준, `_scenario` 필드 의미 기반 화면 분기 기준, HTTP method별 API 명세 필수 항목, 실패 흐름 작성 기준, 작성 지침 7가지, 자가 검증 체크리스트 |
+| [skill-md-format-rules.md](skill-md-format-rules.md) | SKILL.md의 frontmatter(`confidence` 섹션 작성 기준 포함), 타입별 `description` 작성 규칙(`_api`/`_domain`/`_scenario` 패턴), 바디 섹션 구조, `_domain` 필드 의미 작성 기준, `_scenario` 필드 의미 기반 화면 분기 기준·화면 미사용 필드 마킹 기준, HTTP method별 API 명세 필수 항목, 실패 흐름 작성 기준, 작성 지침 7가지, 자가 검증 체크리스트 |
 | [result-output-format.md](result-output-format.md) | 작업 완료 후 사용자에게 보여줄 결과 리포트 형식 |
 
 ### 리소스를 언제 읽는지
@@ -284,6 +284,10 @@ grep -r "ProcessingStatus" {SKILL_ROOTS}
 | 동일하거나 유사한 `name` 의 SKILL.md가 존재함               | **UPDATE** |
 
 UPDATE 모드라면 기존 SKILL.md를 반드시 읽은 뒤 진행한다. 기존 파일은 그 자리에서 갱신한다.
+
+화면 구현이 진행된 도메인의 `_scenario`를 UPDATE할 때, 또는 "화면에서 안 쓰는 필드 표시해줘" 같은
+요청이 오면 포맷 규칙의 화면 미사용 필드 마킹 기준에 따라 화면 코드에서 필드 참조를 확인하고
+`## 화면 미사용 필드`를 추가·갱신한다. 화면 코드가 아직 없으면 마킹하지 않고 그 사실을 리포트에 적는다.
 
 ---
 
