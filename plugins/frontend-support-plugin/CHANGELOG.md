@@ -1,5 +1,22 @@
 # Changelog — frontend-support-plugin
 
+## [1.11.0] - 2026-10-21
+
+### 추가
+- `mutation-feedback-patterns` 스킬: React Query `useMutation` 실행 시 성공·실패 토스트 문구(실패는 서버 메시지
+  우선, `error.message` 금지), 연관 쿼리 갱신(`invalidateQueries` 범위·await 후 닫기·`cancelQueries`는 낙관적
+  업데이트 때만·서버 상태 불변 작업은 갱신 안 함), 호출자 콜백 항상 실행, loading 토스트(`onSettled`에서 닫기),
+  공통 래퍼 `useToastMutation` 설계 지침과 `@we/ai-template` 대응표를 정리했다.
+
+### 변경
+- `frontend-workflows`에 새 UI 프로젝트 시작 업무를 추가했다. 절차 원본 `resources/new-ui-project/procedure.md`는
+  단계(구조·데이터 상태·mutation·로깅·테스트·의존성)마다 읽을 스킬과 깔아 둘 공통 기반을 정하고, 마지막에
+  대상 프로젝트 안내 문서에 작업별 스킬 표를 남긴다.
+- `suspense-boundary-patterns`에 폴백 UI 규칙 6~9를 추가했다: 스피너·스켈레톤 고르기(이름만 스켈레톤인 스피너
+  금지), 폴백이 데이터 영역과 같은 크기 차지(고정 높이 상수 공유·`flex: 1`), 가장 가까운 Suspense가 폴백을
+  정한다(내장 Suspense 래퍼 안쪽에 바운더리 금지), 오류 폴백 계층(앱·페이지·위젯)과 서버 메시지 우선·
+  `QueryErrorResetBoundary` 기반 다시 시도. description 키워드·체크리스트·examples를 함께 갱신했다.
+
 ## [1.10.0] - 2026-10-06
 
 ### 추가

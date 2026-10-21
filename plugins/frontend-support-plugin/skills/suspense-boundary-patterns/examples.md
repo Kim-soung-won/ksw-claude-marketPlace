@@ -266,3 +266,156 @@ function BucketSection({ bucketName }: { bucketName: string }) {
   <QueryErrorBoundary colSpan={12}><TrafficChart /></QueryErrorBoundary>
 </Grid>
 ```
+
+---
+
+## 스켈레톤
+
+실제 카드 묶음과 같은 Grid·카드 개수·높이로 자리를 잡는다. 데이터 컴포넌트 옆에 두고 함께 고친다.
+
+```tsx
+// usage-count-group.ui.tsx — 실제 화면
+export function UsageCountGroup() {
+  const { data } = useSuspenseQuery(usageQueries.counts());
+  return (
+    <Grid>
+      {data.map((item) => (
+        <GridItem key={item.id} colSpan={3}>
+          <MetricCard title={item.label} value={item.count} />
+        </GridItem>
+      ))}
+    </Grid>
+  );
+}
+
+// usage-count-group.skeleton.tsx — 같은 레이아웃을 본뜬 폴백
+const CARD_COUNT = 4; // 실제 카드 수와 맞춘다
+
+export function UsageCountGroupSkeleton() {
+  return (
+    <Grid aria-busy="true" aria-label="사용량 불러오는 중">
+      {Array.from({ length: CARD_COUNT }, (_, i) => (
+        <GridItem key={i} colSpan={3}>
+          <div className="skeleton-card" /> {/* MetricCard와 같은 높이·모서리 */}
+        </GridItem>
+      ))}
+    </Grid>
+  );
+}
+
+// 사용
+<QueryErrorBoundary fallback={<UsageCountGroupSkeleton />}>
+  <UsageCountGroup />
+</QueryErrorBoundary>
+```
+
+```tsx
+// ❌ 이름만 스켈레톤 — 레이아웃 자리를 잡지 못하고, 읽는 사람을 속인다
+export function MonitorPageSkeleton() {
+  return <Spinner />;
+}
+```
+
+---
+
+## 폴백 크기 맞추기
+
+```tsx
+// 고정 높이 영역 — 숫자 상수 하나에서 파생한다
+export const CHART_HEIGHT_PX = 140;
+export const CHART_HEIGHT = `${CHART_HEIGHT_PX}px`;
+
+<ChartCard loadingHeight={CHART_HEIGHT_PX}>      {/* 숫자를 받는 API */}
+  <LineChart height={CHART_HEIGHT} />             {/* CSS 길이를 받는 API */}
+</ChartCard>
+
+// 남은 높이를 채우는 본문 — 폴백도 flex: 1
+<div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+  <SearchToolbar />
+  <QueryErrorBoundary fallbackStyle={{ flex: 1 }}>
+    <AgentList />
+  </QueryErrorBoundary>
+</div>
+
+// ❌ 화면 기준 고정값 — 다이얼로그·사이드 패널에서 넘치고, 큰 화면에선 위쪽에 붙는다
+<div style={{ height: "70vh", display: "flex", alignItems: "center" }}>
+  <Spinner />
+</div>
+```
+
+> 상수 파일은 데이터 컴포넌트·레이아웃이 서로 import하는 순환 고리 밖에 둔다. HOC 설정처럼
+> **모듈 최상단에서** 상수를 읽으면, 순환 import 중 아직 초기화되지 않은 값을 읽어 TDZ 오류가 난다.
+
+---
+
+## 내장 Suspense가 있는 래퍼
+
+카드 HOC가 `GridItem > Card > Suspense(전용 폴백) > 컴포넌트` 구조라고 할 때:
+
+```tsx
+// ❌ 오류 바운더리를 HOC 안쪽에 넣음
+//    → 바운더리 자체 Suspense가 더 가까워져 HOC 전용 로딩 폴백(문구·높이)이 쓰이지 않고,
+//      카드 안에 GridItem(colSpan)이 한 겹 더 생긴다
+function ChartContentWithBoundary() {
+  return (
+    <QueryErrorBoundary colSpan={6}>
+      <ChartContent />
+    </QueryErrorBoundary>
+  );
+}
+export const UsageChart = withChartCard(ChartContentWithBoundary, { title: "호출 추이", colSpan: 6 });
+
+// ✅ HOC는 컨텐츠만 감싸고, 오류 바운더리는 그리드 칸 레벨(HOC 바깥)
+export const UsageChart = withChartCard(ChartContent, { title: "호출 추이", colSpan: 6, height: CHART_HEIGHT_PX });
+
+<Grid>
+  <QueryErrorBoundary colSpan={6} size="sm">
+    <UsageChart />            {/* 로딩 = HOC 내장 폴백, 오류 = 칸 전체를 오류 UI로 */}
+  </QueryErrorBoundary>
+</Grid>
+```
+
+---
+
+## 오류 폴백 계층
+
+```tsx
+// ① 앱·노출 모듈 최상위 — 마지막 방어선. 로딩 문구가 아니라 오류 화면
+<ErrorBoundary FallbackComponent={(props) => <PageErrorFallback {...props} serverName="Agent" />}>
+  <AppRoutes />
+</ErrorBoundary>
+
+// ② 페이지·feature — 툴바는 밖, 데이터 레이어만 오류 화면으로
+<SearchToolbar />
+<QueryErrorBoundary resetKeys={[keyword]} errorTitle="에이전트 목록을 불러오지 못했습니다">
+  <AgentList keyword={keyword} />
+</QueryErrorBoundary>
+
+// ③ 위젯 — 칸 단위, 작은 상태 UI
+<QueryErrorBoundary colSpan={3} size="sm">
+  <RevenueCard />
+</QueryErrorBoundary>
+```
+
+```tsx
+// 상태 코드별 안내 — 그 상태만 고르고 나머지는 서버 메시지 규칙에 맡긴다
+const cardListErrorMessage = (error: unknown) =>
+  axios.isAxiosError(error) && error.response?.status === 503
+    ? "시크릿 저장소에 연결되지 않아 카드를 불러오지 못했습니다."
+    : undefined; // → 서버 메시지(본문 message → error) → 고정 문구
+
+<QueryErrorBoundary getErrorMessage={cardListErrorMessage}>
+  <ConnectionCardList />
+</QueryErrorBoundary>
+```
+
+```tsx
+// ❌ 다시 시도를 새로고침으로 / 오류 원문 노출 / 오류를 빈 데이터로
+<ErrorBoundary FallbackComponent={() => <ErrorView onRetry={() => window.location.reload()} />}>
+<ErrorView message={error.message} />                    {/* "Request failed with status code 500" */}
+if (!isSuccess || !data?.length) return <EmptyState />;  {/* 실패도 "데이터 없음"으로 보임 */}
+```
+
+> `QueryErrorBoundary`·`PageErrorFallback`·`getErrorMessage`는 `@we/ai-template` 기준 이름이다.
+> 다른 라이브러리라면 `QueryErrorResetBoundary` + `ErrorBoundary`(react-error-boundary)로 같은 구조를
+> 직접 조립한다: `onReset={reset}`, `resetKeys`, 폴백에서 서버 메시지 추출.
