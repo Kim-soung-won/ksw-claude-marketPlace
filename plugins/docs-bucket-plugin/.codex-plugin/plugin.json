@@ -1,0 +1,18 @@
+{
+  "name": "docs-bucket-plugin",
+  "version": "0.1.0",
+  "description": "GitHub 문서 저장소의 HTML·Markdown·첨부 파일을 업로드하고 검색·불러오는 플러그인. 개인 설정과 기존 gh 인증을 사용한다.",
+  "author": {
+    "name": "kimsoungwon"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Docs Bucket",
+    "shortDescription": "GitHub 문서 보관·검색·업로드·불러오기",
+    "longDescription": "GitHub 문서 저장소의 HTML·Markdown·첨부 파일을 업로드하고 검색·불러오는 플러그인. 개인 설정과 기존 gh 인증을 사용한다.",
+    "developerName": "kimsoungwon",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "docs-bucket 스킬로 문서 저장소 작업을 처리해줘."
+  }
+}

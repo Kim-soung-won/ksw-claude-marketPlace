@@ -58,6 +58,11 @@
       "name": "codex-docs-plugin",
       "source": "./plugins/codex-docs-plugin",
       "description": "Codex 설정·스킬·에이전트·플러그인·훅·MCP의 작성과 진단을 최신 OpenAI 공식 문서에 근거해 수행하는 플러그인"
+    },
+    {
+      "name": "docs-bucket-plugin",
+      "source": "./plugins/docs-bucket-plugin",
+      "description": "GitHub 문서 저장소의 HTML·Markdown·첨부 파일을 업로드하고 검색·불러오는 플러그인. 개인 설정과 기존 gh 인증을 사용한다."
     }
   ]
 }

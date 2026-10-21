@@ -7,7 +7,7 @@ Claude Code·Codex 플러그인 마켓플레이스. 프론트엔드 개발과 Cl
 
 ## Codex 지원
 
-11개 플러그인을 모두 Codex 카탈로그에 등록했다. 스킬은 플러그인 설치 후 사용할 수 있고,
+12개 플러그인을 모두 Codex 카탈로그에 등록했다. 스킬은 플러그인 설치 후 사용할 수 있고,
 격리된 작업이 필요하면 에이전트 18개를 별도로 등록한다. wiki 커맨드 3개는 스킬로도 제공한다.
 [Codex 설치·갱신·지원 범위](docs/codex.md)를 참고한다. `claude-code-docs-plugin`은
 Codex에서 실행해도 Claude Code 정의를 관리하는 도구다.
@@ -42,15 +42,17 @@ Claude Code 안에서 두 줄이면 끝이다.
 | [`agent-factory-plugin`](plugins/agent-factory-plugin/) | 커밋 세션 캡처·피드백·Observer 조회 | 에이전트 1 · 스킬 1 · 훅·MCP |
 | [`module-federation-official-plugin`](plugins/module-federation-official-plugin/) | 공식 Module Federation 통합 스킬 | 스킬 1 |
 | [`architecture-manage-plugin`](plugins/architecture-manage-plugin/) | C4 모델링·동기화·브리핑 | 에이전트 1 · 스킬 3 |
+| [`docs-bucket-plugin`](plugins/docs-bucket-plugin/) | GitHub 문서 보관·검색·업로드·불러오기 | 스킬 1 · CLI |
 
 각 플러그인의 변경 내역은 해당 디렉터리의 `CHANGELOG.md` 에 있다.
 
 ## 전제조건
 
-대부분의 플러그인은 아무 준비 없이 동작한다. 아래 셋만 외부 자원을 쓴다.
+대부분의 플러그인은 아무 준비 없이 동작한다. 아래 넷만 외부 자원을 쓴다.
 
 | 전제 | 필요한 플러그인 | 없으면 |
 |---|---|---|
+| Git·Node 22+·gh 로그인·개인 저장소 설정 | `docs-bucket-plugin` | 스킬에서 최초 설정을 안내한다 |
 | Obsidian vault (기본 `~/agent-knowledge-base`, `KB_VAULT_PATH` 로 변경) | `wiki-manager-plugin` | 에이전트가 vault 경로를 되묻는다. 다른 플러그인은 영향 없음 |
 | Observer 서버 (`~/.agent-factory/config.json` 의 `apiBase`·`token`, 또는 `OBSERVER_API_BASE`·`OBSERVER_TOKEN`) | `agent-factory-plugin` 의 MCP 조회 도구 | 캡처·distill·요약까지는 그대로 동작한다. **MCP 조회 도구 9종만 오류를 반환한다** |
 | `@we/ai-template` 를 쓰는 프로젝트 | `ui-template-manage-plugin` | 문서화할 대상이 없다 |
