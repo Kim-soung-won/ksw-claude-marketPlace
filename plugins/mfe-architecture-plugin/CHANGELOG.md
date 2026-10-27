@@ -1,5 +1,16 @@
 # Changelog — mfe-architecture-plugin
 
+## [0.6.0] - 2026-10-27
+
+### 추가
+- 스킬 `mfe-shared-query-client`: Host·Remote react-query 인스턴스 통합 규약. 중복이 생기는 세 층
+  (라이브러리·Provider·모듈 전역 인스턴스), 렌더 중 주입·standalone 폴백 `QueryClientBridge` 기준 구현,
+  기존 모듈 점검·이전 절차, 검토 후 채택하지 않은 대안(client 인자 전달)을 담는다.
+
+### 변경
+- `mfe-runtime-troubleshooting` 사례 4와 계열 D 표, `mf-config-reference.md` §7 서버 캐시 규약을
+  새 기준 구현에 맞췄다. `useEffect` 주입·주입 전 throw 구현 예시를 걷어냈다.
+
 ## [0.5.0] - 2026-09-28
 
 ### 변경

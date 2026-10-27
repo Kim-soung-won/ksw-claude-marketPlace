@@ -181,7 +181,7 @@ export default AgentDashboardComp;
 |---|---|
 | **테마·언어** | `window` CustomEvent(`"theme"`, `"language"`) 브로드캐스트 + `localStorage` 폴백. Remote 는 마운트 시 구독, 언마운트 시 해제 |
 | **인증·메뉴 권한** | Host 가 채우는 전역 스토어(`window.__WE_AUTH_MENU_STORE__`)를 Remote 가 읽는다 |
-| **서버 캐시(react-query)** | Provider Context 로 내려온 `QueryClient` 를 모듈 전역에 캡처하는 **브리지 컴포넌트**를 Provider 안에 렌더한다(`useQueryClient()` → 모듈 스코프 변수에 저장). 훅 밖(서비스 코드)에서 캐시를 만져야 할 때 이 인스턴스를 쓴다 |
+| **서버 캐시(react-query)** | `QueryClientProvider` 는 Host 만 소유하고 Remote 노출 래퍼는 만들지 않는다. 노출 래퍼(와 standalone Provider)의 children 앞에 **브리지 컴포넌트**를 렌더해 Context 의 `QueryClient` 를 **렌더 중에** 모듈 전역에 주입한다. 훅 밖(쿼리 클래스·서비스)은 `getQueryClient()` 만 쓰고 전역 `queryClient` 를 직접 import 하지 않는다(standalone 실행 시 모듈 싱글턴으로 폴백). 기준 구현: `skills/mfe-shared-query-client/SKILL.md` |
 | **도메인 데이터** | 서버 API 를 통해서만. Remote 끼리 직접 import 하지 않는다 |
 | **타입** | 공용 타입 패키지(`@we/ai-types`)로 배포해 `shared.singleton` 으로 정렬 |
 

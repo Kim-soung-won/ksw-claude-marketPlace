@@ -143,7 +143,7 @@ grep -rn "loadRemote(" <host>/src | head -20
 |---|---|---|
 | 인증·메뉴 권한 | Host 가 채우는 전역 스토어(`window.__…__`) | Host 가 채우기 **전에** Remote 가 읽지 않는지(마운트 타이밍), 키 이름 오타 |
 | 테마·언어 | `window` CustomEvent + localStorage 폴백 | Remote 가 마운트 시 구독하는지, 언마운트 시 해제하는지, 이벤트 이름 일치 |
-| 서버 캐시(react-query) | Provider Context + 모듈 전역 브리지 | `@tanstack/react-query` 가 양쪽 `shared.singleton` 인지, 브리지 컴포넌트가 Provider **안**에 렌더되는지 |
+| 서버 캐시(react-query) | Provider Context + 모듈 전역 브리지 | `@tanstack/react-query` 가 양쪽 `shared.singleton` 인지, 노출 래퍼가 자체 `QueryClientProvider` 를 만들지 않는지, 브리지가 Provider **안**·children **앞**에 렌더되는지, 훅 밖 코드가 전역 `queryClient` 를 직접 import 하지 않는지 — 규약·기준 구현은 `mfe-shared-query-client` 스킬 |
 | 클라이언트 스토어(zustand) | `shared.singleton` + 같은 store 모듈 | store 파일이 모듈별로 각자 번들되면 별개 store 다. 공유하려면 공용 패키지로 빼야 한다 |
 | 도메인 데이터 | 서버 API | — |
 

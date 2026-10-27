@@ -12,6 +12,7 @@
 | 에이전트 | `remote-contract-manager` | Remote 가 `exposes` 로 공개한 계약을 `MFE_{RemoteName}` SKILL.md 로 기록·감사 |
 | 스킬 | `mfe-runtime-troubleshooting` | 런타임 통합 실패를 6계열로 분류해 진단하는 절차 + 사례집 |
 | 스킬 | `mfe-boundary-design` | 무엇을 모듈로 뗄지·무엇을 셸에 둘지·모듈 간 통신 경로를 정하는 판단 기준 + 사례집 |
+| 스킬 | `mfe-shared-query-client` | Host·Remote 가 react-query 캐시를 하나로 쓰게 하는 `QueryClientBridge` 규약·기준 구현·기존 모듈 이전 절차 |
 
 ## 리소스
 

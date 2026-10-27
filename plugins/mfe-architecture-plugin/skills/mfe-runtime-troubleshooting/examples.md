@@ -102,24 +102,17 @@ errorLoadRemote({ id, error }) {
 1. `@tanstack/react-query` 가 한쪽 `shared` 에서 `singleton` 이 빠져 라이브러리가 두 벌.
 2. 라이브러리는 공유됐지만 **`QueryClient` 인스턴스**가 모듈마다 따로 생성됨.
 
-**대응**: 양쪽 `shared` 에 `singleton: true` 로 맞추고, 노출 래퍼 안에 브리지를 렌더해
-Context 의 클라이언트를 모듈 전역에 캡처한다.
+3. 노출 래퍼가 자체 `QueryClientProvider` 로 다시 감싸거나, 컴포넌트 밖 코드가 모듈 전역
+   `queryClient` 를 직접 import 해 어떤 Provider 와도 연결 안 된 인스턴스를 건드림.
 
-```tsx
-let _client: QueryClient | null = null;
-export function getQueryClient() {
-  if (!_client) throw new Error("QueryClient not initialized");
-  return _client;
-}
-export function QueryClientBridge() {
-  const client = useQueryClient();          // Provider 안에서만 유효
-  useEffect(() => { _client = client; }, [client]);
-  return null;
-}
-```
+**대응**: 양쪽 `shared` 에 `singleton: true` 로 맞추고, 노출 래퍼에서 자체 Provider 를 빼고
+children 앞에 `QueryClientBridge` 를 렌더해 host 의 클라이언트를 모듈 전역에 주입한다.
+훅 밖(쿼리 클래스·서비스)에서는 `getQueryClient()` 로 이 인스턴스를 쓴다.
+`new QueryClient()` 를 그 자리에서 만들거나 전역 `queryClient` 를 직접 import 하면 캐시가 또 갈린다.
 
-훅 밖(서비스·이벤트 핸들러)에서는 `getQueryClient()` 로 이 인스턴스를 쓴다.
-`new QueryClient()` 를 그 자리에서 만들면 캐시가 또 갈린다.
+> 기준 구현(렌더 중 주입·standalone 폴백)과 기존 모듈 이전 절차는
+> [`mfe-shared-query-client`](../mfe-shared-query-client/SKILL.md) 스킬에 있다.
+> `useEffect` 로 주입하거나 주입 전에 throw 하는 구현은 첫 렌더의 `initialData` 에서 깨진다.
 
 **같은 함정, 다른 대상**: `zustand` 를 singleton 으로 공유해도 각 모듈이 자기 `create()`
 를 호출하면 store 는 별개다. 진짜로 공유하려면 store 를 공용 패키지로 빼거나 전역
