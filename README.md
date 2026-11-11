@@ -31,7 +31,7 @@ Claude Code 안에서 두 줄이면 끝이다.
 
 | 플러그인 | 하는 일 | 구성 |
 |---|---|---|
-| [`frontend-support-plugin`](plugins/frontend-support-plugin/) | FSD 구조·컴포넌트 설계·Vitest 작성과 감사 | 에이전트 3 · 스킬 6 |
+| [`frontend-support-plugin`](plugins/frontend-support-plugin/) | FSD 구조·컴포넌트 설계·Vitest 작성과 감사 | 에이전트 3 · 스킬 9 |
 | [`codex-docs-plugin`](plugins/codex-docs-plugin/) | 공식 문서 기반 Codex 확장 작성·진단 | 스킬 1 |
 | [`claude-code-docs-plugin`](plugins/claude-code-docs-plugin/) | Claude Code 에이전트·스킬·훅·MCP 작성·진단 | 에이전트 6 · 스킬 3 |
 | [`domain-knowledge-plugin`](plugins/domain-knowledge-plugin/) | API·도메인·시나리오 스킬 기록·감사 | 에이전트 2 · 스킬 1 |
@@ -42,18 +42,16 @@ Claude Code 안에서 두 줄이면 끝이다.
 | [`agent-factory-plugin`](plugins/agent-factory-plugin/) | 커밋 세션 캡처·피드백·Observer 조회 | 에이전트 1 · 스킬 1 · 훅·MCP |
 | [`module-federation-official-plugin`](plugins/module-federation-official-plugin/) | 공식 Module Federation 통합 스킬 | 스킬 1 |
 | [`architecture-manage-plugin`](plugins/architecture-manage-plugin/) | C4 모델링·동기화·브리핑 | 에이전트 1 · 스킬 3 |
-| [`docs-bucket-plugin`](plugins/docs-bucket-plugin/) | GitHub 문서 보관·검색·업로드·불러오기 | 스킬 1 · CLI |
 | [`script-flow-docs-plugin`](plugins/script-flow-docs-plugin/) | 스크립트 실행 흐름 Mermaid 문서(FLOW.md) 작성·동기화 | 스킬 1 |
 
 각 플러그인의 변경 내역은 해당 디렉터리의 `CHANGELOG.md` 에 있다.
 
 ## 전제조건
 
-대부분의 플러그인은 아무 준비 없이 동작한다. 아래 넷만 외부 자원을 쓴다.
+대부분의 플러그인은 아무 준비 없이 동작한다. 아래 셋만 외부 자원을 쓴다.
 
 | 전제 | 필요한 플러그인 | 없으면 |
 |---|---|---|
-| Git·Node 22+·gh 로그인·개인 저장소 설정 | `docs-bucket-plugin` | 스킬에서 최초 설정을 안내한다 |
 | Obsidian vault (기본 `~/agent-knowledge-base`, `KB_VAULT_PATH` 로 변경) | `wiki-manager-plugin` | 에이전트가 vault 경로를 되묻는다. 다른 플러그인은 영향 없음 |
 | Observer 서버 (`~/.agent-factory/config.json` 의 `apiBase`·`token`, 또는 `OBSERVER_API_BASE`·`OBSERVER_TOKEN`) | `agent-factory-plugin` 의 MCP 조회 도구 | 캡처·distill·요약까지는 그대로 동작한다. **MCP 조회 도구 9종만 오류를 반환한다** |
 | `@we/ai-template` 를 쓰는 프로젝트 | `ui-template-manage-plugin` | 문서화할 대상이 없다 |

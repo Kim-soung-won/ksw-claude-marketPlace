@@ -1,5 +1,17 @@
 # Changelog — frontend-support-plugin
 
+## [2.0.0] - 2026-11-11
+
+### 제거
+- `domain-ui-tdd` 스킬과 `resources/domain-ui-tdd/`·`resources/tdd/test-lifecycle.md`를 삭제했다. 테스트는
+  구현·확인이 끝난 기능을 정립하는 단계에서 작성하므로 명세 선작성 TDD 하네스를 쓰지 않는다.
+- 테스트 작성·감사 절차의 `verify`/`spec-first` 모드와 EXPECTED_RED·SPEC_CONFLICT·CHARACTERIZATION 등
+  결과 분류를 제거했다. test-writer·integration-test-writer는 다시 실제 통과까지 책임지고,
+  test-reviewer의 (e) 항목은 현재 통과 여부를 판정한다.
+
+### 변경
+- `frontend-workflows`·`fsd-structure-architect`·새 UI 프로젝트 절차에서 TDD 하네스 연결을 지웠다.
+
 ## [1.11.0] - 2026-10-21
 
 ### 추가

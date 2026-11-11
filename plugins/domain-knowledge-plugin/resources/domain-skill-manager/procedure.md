@@ -172,8 +172,7 @@ git rev-parse --show-toplevel
 
 ## 워크플로
 
-계약 코드 생성·기존 도메인 대조가 함께 요청되면
-[domain-contracts](../../skills/domain-contracts/SKILL.md)를 적용한다. 이 관리자는 지식 기록을
+이 관리자는 지식 기록을
 담당하며 UI 구현까지 자동으로 진행하지 않는다. 출처·버전·문서 위치를 기록하고,
 코드에서만 관찰한 동작은 확정 업무 규칙과 구분한다.
 

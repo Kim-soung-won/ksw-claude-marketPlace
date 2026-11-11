@@ -1,5 +1,15 @@
 # Changelog — domain-knowledge-plugin
 
+## [2.0.0] - 2026-11-11
+
+### 제거
+- `domain-contracts` 스킬과 `resources/domain-contracts/`를 삭제했다. TDD 하네스의 계약 준비 단계였으며
+  frontend-support-plugin 2.0.0에서 하네스를 제거했다.
+
+### 변경
+- `domain-knowledge` 스킬·domain-skill-manager·domain-skill-reviewer에서 계약 준비·TDD 연결을 지웠다.
+  테스트 존재 검사(`test-presence.md`)는 유지하되 EXPECTED_RED·특성화 분류를 제거했다.
+
 ## [1.6.0] - 2026-10-06
 
 ### 추가

@@ -73,9 +73,6 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 }
 ```
 
-- 도메인 기능을 테스트 명세로 개발할 계획이면 [domain-ui-tdd](../../skills/domain-ui-tdd/SKILL.md)
-  의 하네스 구성을 이 단계에서 함께 잡는다.
-
 ## 6. 의존성 정리
 
 - 스캐폴드 템플릿에서 따라온 미사용 패키지를 [dependency-cleanup](../../skills/dependency-cleanup/SKILL.md)

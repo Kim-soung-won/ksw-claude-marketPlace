@@ -8,7 +8,7 @@ Codex에서는 플러그인 설치로 스킬을 사용하고, 격리된 작업�
 
 | 플러그인 | Codex 스킬 | 에이전트 |
 |---|---|---:|
-| frontend-support-plugin | 기존 설계·테스트 규약 5개 + frontend-workflows | 3 |
+| frontend-support-plugin | 설계·테스트 규약 8개 + frontend-workflows | 3 |
 | domain-knowledge-plugin | domain-knowledge | 2 |
 | ui-template-manage-plugin | component-documentation | 1 |
 | planning-plugin | change-planning | 1 |
@@ -19,7 +19,7 @@ Codex에서는 플러그인 설치로 스킬을 사용하고, 격리된 작업�
 | claude-code-docs-plugin | claude-code-hooks, claude-code-jsonl, claude-maintenance | 6 |
 | agent-factory-plugin | session-feedback + Observer MCP + 공식 훅 수집 | 1 |
 | codex-docs-plugin | codex-docs | 0 |
-| docs-bucket-plugin | docs-bucket | 0 |
+| script-flow-docs-plugin | script-flow-docs | 0 |
 
 `claude-code-docs-plugin`은 Codex에서 **Claude Code용 정의**를 관리한다. Codex 자체의
 규격은 `codex-docs-plugin`을 사용한다. 두 제품의 모델·설정 필드를 서로 치환하지 않는다.
