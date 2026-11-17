@@ -43,6 +43,7 @@ Claude Code 안에서 두 줄이면 끝이다.
 | [`module-federation-official-plugin`](plugins/module-federation-official-plugin/) | 공식 Module Federation 통합 스킬 | 스킬 1 |
 | [`architecture-manage-plugin`](plugins/architecture-manage-plugin/) | C4 모델링·동기화·브리핑 | 에이전트 1 · 스킬 3 |
 | [`script-flow-docs-plugin`](plugins/script-flow-docs-plugin/) | 스크립트 실행 흐름 Mermaid 문서(FLOW.md) 작성·동기화 | 스킬 1 |
+| [`browser-verify-plugin`](plugins/browser-verify-plugin/) | 실행 중인 화면을 임시 Chrome 으로 점검(키보드·포커스·폭별 넘침·layout shift) | 스킬 1 |
 
 각 플러그인의 변경 내역은 해당 디렉터리의 `CHANGELOG.md` 에 있다.
 

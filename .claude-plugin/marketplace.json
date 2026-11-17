@@ -63,6 +63,11 @@
       "name": "script-flow-docs-plugin",
       "source": "./plugins/script-flow-docs-plugin",
       "description": "셸·Python·Node 등 단독 실행 스크립트를 만들거나 고칠 때, 폴더마다 FLOW.md에 Mermaid 실행 흐름·부수효과 표·언어 관용구 해설을 함께 작성·동기화하는 규칙을 제공하는 플러그인."
+    },
+    {
+      "name": "browser-verify-plugin",
+      "source": "./plugins/browser-verify-plugin",
+      "description": "실행 중인 웹 화면을 임시 Chrome 으로 열어 점검하는 절차를 제공하는 플러그인 — 빌드 로드 확인, 키보드·포커스·폼 동작 측정, 창 폭별 레이아웃 넘침과 layout shift 측정, 스크린샷 판단 기준, 서버 데이터를 바꾸지 않는 안전 장치, 근거를 구분한 보고 형식과 점검마다 쌓는 개선 기록을 담는다"
     }
   ]
 }
