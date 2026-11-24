@@ -3,7 +3,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { ROOT, listPlugins, createReporter } = require('./lib/repo');
+const { ROOT, listAllPlugins, createReporter } = require('./lib/repo');
 const report = createReporter('Codex');
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const files = (dir, ext) => fs.existsSync(dir) ? fs.readdirSync(dir).filter(x => x.endsWith(ext)) : [];
@@ -23,7 +23,7 @@ try {
     try {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.name) || names.has(entry.name)) throw Error('플러그인 이름 오류/중복');
       names.add(entry.name);
-      if (entry.source.source !== 'local' || entry.source.path !== './plugins/' + entry.name) throw Error('source 오류');
+      if (entry.source.source !== 'local' || !['./plugins/' + entry.name, './third-party/' + entry.name].includes(entry.source.path)) throw Error('source 오류');
       if (!['AVAILABLE', 'NOT_AVAILABLE', 'INSTALLED_BY_DEFAULT'].includes(entry.policy.installation) || !['ON_INSTALL', 'ON_USE'].includes(entry.policy.authentication) || !entry.category) throw Error('policy/category 오류');
       const root = path.join(ROOT, entry.source.path);
       const manifest = read(path.join(root, '.codex-plugin/plugin.json'));
@@ -68,8 +68,8 @@ try {
       }
     } catch (error) { report.error(`${entry.name}: ${error.message}`); }
   }
-  for (const name of listPlugins()) {
-    if (fs.existsSync(path.join(ROOT, 'plugins', name, '.codex-plugin/plugin.json')) && !names.has(name)) report.error('Codex 카탈로그 누락: ' + name);
+  for (const plugin of listAllPlugins()) {
+    if (fs.existsSync(path.join(plugin.dir, '.codex-plugin/plugin.json')) && !names.has(plugin.name)) report.error('Codex 카탈로그 누락: ' + plugin.rel);
   }
 } catch (error) { report.error(error.message); }
 report.finish(checked);

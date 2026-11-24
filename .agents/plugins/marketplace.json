@@ -171,6 +171,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Productivity"
+    },
+    {
+      "name": "requirements-definition-plugin",
+      "source": {
+        "source": "local",
+        "path": "./third-party/requirements-definition-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
     }
   ]
 }

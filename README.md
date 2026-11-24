@@ -7,7 +7,7 @@ Claude Code·Codex 플러그인 마켓플레이스. 프론트엔드 개발과 Cl
 
 ## Codex 지원
 
-14개 플러그인을 모두 Codex 카탈로그에 등록했다. 스킬은 플러그인 설치 후 사용할 수 있고,
+14개 플러그인과 외부 스킬 플러그인 1개를 모두 Codex 카탈로그에 등록했다. 스킬은 플러그인 설치 후 사용할 수 있고,
 격리된 작업이 필요하면 에이전트 18개를 별도로 등록한다. wiki 커맨드 3개는 스킬로도 제공한다.
 [Codex 설치·갱신·지원 범위](docs/codex.md)를 참고한다. `claude-code-docs-plugin`은
 Codex에서 실행해도 Claude Code 정의를 관리하는 도구다.
@@ -47,6 +47,14 @@ Claude Code 안에서 두 줄이면 끝이다.
 | [`learning-coach-plugin`](plugins/learning-coach-plugin/) | 목표 중심 학습·예시 코드·Mermaid·시험·복습·Notion 인계 절차 | 스킬 1 |
 
 각 플러그인의 변경 내역은 해당 디렉터리의 `CHANGELOG.md` 에 있다.
+
+### 외부 스킬
+
+다른 개발자·오픈소스의 스킬을 원본 그대로 감싸 같은 방식으로 설치할 수 있게 했다. 출처·라이선스·갱신 규칙은 [third-party/README.md](third-party/README.md)에 있다.
+
+| 플러그인 | 용도 | 스킬 (원본) |
+|---|---|---|
+| [`requirements-definition-plugin`](third-party/requirements-definition-plugin/) | 구현 전 요구 정의: 인터뷰로 의도 확정, 명세 작성 | interview-me · spec-driven-development ([addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), MIT) |
 
 ## 전제조건
 

@@ -1,6 +1,6 @@
 # Codex 설치·지원 범위
 
-이 저장소의 14개 플러그인은 Claude Code와 Codex 카탈로그에 함께 등록되어 있다.
+이 저장소의 14개 플러그인과 외부 스킬 플러그인 1개(`third-party/`)는 Claude Code와 Codex 카탈로그에 함께 등록되어 있다.
 Codex에서는 플러그인 설치로 스킬을 사용하고, 격리된 작업이 필요하면 커스텀 에이전트를
 추가 등록한다. 카탈로그에 등록되었다는 사실과 실제 앱에서의 호출 검증은 구분한다.
 
@@ -22,6 +22,7 @@ Codex에서는 플러그인 설치로 스킬을 사용하고, 격리된 작업�
 | script-flow-docs-plugin | script-flow-docs | 0 |
 | browser-verify-plugin | browser-verify | 0 |
 | learning-coach-plugin | learning-coach | 0 |
+| requirements-definition-plugin (외부, `third-party/`) | interview-me, spec-driven-development | 0 |
 
 `claude-code-docs-plugin`은 Codex에서 **Claude Code용 정의**를 관리한다. Codex 자체의
 규격은 `codex-docs-plugin`을 사용한다. 두 제품의 모델·설정 필드를 서로 치환하지 않는다.
@@ -37,7 +38,7 @@ codex plugin marketplace add .
 지원되는 Codex 앱의 `personal` 마켓플레이스에서 원하는 플러그인을 설치한다.
 이름은 생성 도구 기본값이며 Claude 카탈로그 이름은 `ksw-plugins`다.
 같은 이름의 다른 카탈로그가 이미 있으면 기존 등록을 덮어쓰지 말고 등록 경로를 확인한다.
-저장소 카탈로그는 `.agents/plugins/marketplace.json`이고 source는 저장소 루트 기준이다.
+저장소 카탈로그는 `.agents/plugins/marketplace.json`이고 source는 저장소 루트 기준이다(`./plugins/<이름>` 또는 외부 스킬의 `./third-party/<이름>`).
 원격에 아직 푸시하지 않은 변경은 원격 URL 등록으로 받을 수 없다.
 IDE 확장 자체는 플러그인 설치를 지원하지 않는다.
 

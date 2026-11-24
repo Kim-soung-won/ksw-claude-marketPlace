@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * 스킬 정의(plugins/<plugin>/skills/<skill>/SKILL.md) 검증.
+ * 스킬 정의(plugins/·third-party/<plugin>/skills/<skill>/SKILL.md) 검증.
+ * 외부 스킬도 설치되면 같은 방식으로 로드되므로 구조 규칙은 똑같이 적용한다.
  *
  * 검사 항목:
  *   1. skills/ 하위 각 디렉터리에 SKILL.md 가 존재하고 비어 있지 않음  [ERROR]
@@ -18,15 +19,15 @@ const fs = require('fs');
 const path = require('path');
 
 const { extractFrontmatter, inspectFrontmatter, unquote } = require('./lib/frontmatter');
-const { PLUGINS_DIR, repoRelative, listPlugins, createReporter } = require('./lib/repo');
+const { repoRelative, listAllPlugins, createReporter } = require('./lib/repo');
 
 // 스킬 description 은 모델이 자동 호출 여부를 판단하는 유일한 근거다.
 const MIN_DESCRIPTION_LENGTH = 40;
 
 function collectSkillDirs() {
   const dirs = [];
-  for (const plugin of listPlugins()) {
-    const skillsDir = path.join(PLUGINS_DIR, plugin, 'skills');
+  for (const { name: plugin, dir: pluginDir } of listAllPlugins()) {
+    const skillsDir = path.join(pluginDir, 'skills');
     if (!fs.existsSync(skillsDir)) {
       continue;
     }

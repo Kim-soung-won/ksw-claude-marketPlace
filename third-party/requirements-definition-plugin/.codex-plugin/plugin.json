@@ -1,0 +1,20 @@
+{
+  "name": "requirements-definition-plugin",
+  "version": "0.1.0",
+  "description": "[외부] 구현 전에 요구를 정의하는 플러그인 — 요구가 모호하면 한 번에 하나씩 묻는 인터뷰로 의도를 확정하고(interview-me), 코드 작성 전에 명세를 작성한다(spec-driven-development). 원본 addyosmani/agent-skills(MIT)를 수정 없이 제공한다",
+  "author": {
+    "name": "kimsoungwon"
+  },
+  "homepage": "https://github.com/addyosmani/agent-skills",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "요구 정의 (외부)",
+    "shortDescription": "인터뷰로 의도 확정, 코드 전 명세 작성",
+    "longDescription": "[외부] 구현 전에 요구를 정의하는 플러그인 — 요구가 모호하면 한 번에 하나씩 묻는 인터뷰로 의도를 확정하고(interview-me), 코드 작성 전에 명세를 작성한다(spec-driven-development). 원본 addyosmani/agent-skills(MIT)를 수정 없이 제공한다",
+    "developerName": "Addy Osmani (원본) · kimsoungwon (패키징)",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "만들려는 것을 바로 구현하기 전에 인터뷰로 의도를 확인해 줘."
+  }
+}

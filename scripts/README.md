@@ -24,6 +24,10 @@ node scripts/validate-agents.js     # 개별
 | `validate-agents.js` | frontmatter 필수 필드(`name`·`description`), 파일명 = `name`, `model` 허용값(`haiku`/`sonnet`/`opus`/`inherit`), `description` 리터럴 블록 스칼라 금지, `tools` 미선언 경고 |
 | `validate-skills.js` | `SKILL.md` 존재·비어있지 않음, 디렉터리명 = `name`, `description` 규격 |
 | `validate-personal-paths.js` | `/Users/<name>`, `C:\Users\<name>` 하드코딩 검출 |
+| `validate-changelogs.js` | 플러그인마다 `CHANGELOG.md`, 직접 올린 버전의 항목 존재 |
+| `validate-third-party.js` | `third-party/` 외부 스킬의 `SOURCE.md`(원본 저장소·커밋·라이선스·가져온 날짜)·`LICENSE`, 파일별 SHA-256 일치(원본 수정 금지), 기록 없는 파일, 목록 등재 |
+
+매니페스트·Codex·스킬·CHANGELOG·개인 경로 검증기는 `plugins/`와 `third-party/`를 함께 검사한다.
 | `generate-codex-agents.js --check` | `resources/<agent>/procedure.md`가 있는 에이전트의 `codex/agents/<agent>.json`이 Claude frontmatter에서 생성한 결과와 같은지. 다르면 인자 없이 실행해 재생성 |
 
 공용 모듈은 `lib/frontmatter.js`(YAML frontmatter 파서)와

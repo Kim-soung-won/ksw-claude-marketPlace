@@ -25,7 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const { ROOT, PLUGINS_DIR, listPlugins, repoRelative, createReporter } = require('./lib/repo');
+const { ROOT, listAllPlugins, repoRelative, createReporter } = require('./lib/repo');
 
 const CHANGELOG_NAME = 'CHANGELOG.md';
 
@@ -91,14 +91,14 @@ function main() {
   const canCompare = gitAvailable();
   let checked = 0;
 
-  for (const plugin of listPlugins()) {
-    const manifestPath = path.join(PLUGINS_DIR, plugin, '.claude-plugin', 'plugin.json');
+  for (const { dir: pluginDir } of listAllPlugins()) {
+    const manifestPath = path.join(pluginDir, '.claude-plugin', 'plugin.json');
     if (!fs.existsSync(manifestPath)) {
       continue;
     }
     checked += 1;
 
-    const changelogPath = path.join(PLUGINS_DIR, plugin, CHANGELOG_NAME);
+    const changelogPath = path.join(pluginDir, CHANGELOG_NAME);
     if (!fs.existsSync(changelogPath)) {
       report.error(
         `${repoRelative(changelogPath)} 없음 — 버전이 올라도 소비자가 변경 내용을 알 수 없다`

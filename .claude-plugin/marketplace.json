@@ -73,6 +73,11 @@
       "name": "learning-coach-plugin",
       "source": "./plugins/learning-coach-plugin",
       "description": "목표 중심 개인 학습을 예시 코드·Mermaid·마무리 시험·복습으로 진행하고 프로젝트 기록과 Notion 인계를 관리하는 플러그인"
+    },
+    {
+      "name": "requirements-definition-plugin",
+      "source": "./third-party/requirements-definition-plugin",
+      "description": "[외부] 구현 전에 요구를 정의하는 플러그인 — 요구가 모호하면 한 번에 하나씩 묻는 인터뷰로 의도를 확정하고(interview-me), 코드 작성 전에 명세를 작성한다(spec-driven-development). 원본 addyosmani/agent-skills(MIT)를 수정 없이 제공한다"
     }
   ]
 }

@@ -12,7 +12,7 @@
  *   3. source 경로가 실제로 존재하고 그 안에 plugin.json 이 있음
  *   4. 항목 name == 디렉터리명 == plugin.json 의 name (3자 일치)
  *   5. plugin.json 의 version 이 SemVer 형식
- *   6. plugins/ 에 있으나 marketplace.json 에 등재되지 않은 플러그인 없음
+ *   6. plugins/·third-party/ 에 있으나 marketplace.json 에 등재되지 않은 플러그인 없음
  *   7. [WARN] marketplace 항목과 plugin.json 의 description 불일치
  */
 
@@ -21,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { ROOT, PLUGINS_DIR, repoRelative, listPlugins, createReporter } = require('./lib/repo');
+const { ROOT, repoRelative, listAllPlugins, createReporter } = require('./lib/repo');
 
 const MARKETPLACE_PATH = path.join(ROOT, '.claude-plugin', 'marketplace.json');
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
@@ -122,11 +122,11 @@ function main() {
   }
 
   // 역방향: 디렉터리는 있는데 등재되지 않은 플러그인은 사용자에게 보이지 않는다.
-  for (const plugin of listPlugins()) {
-    if (!listedNames.has(plugin)) {
-      const hasManifest = fs.existsSync(path.join(PLUGINS_DIR, plugin, '.claude-plugin', 'plugin.json'));
+  for (const plugin of listAllPlugins()) {
+    if (!listedNames.has(plugin.name)) {
+      const hasManifest = fs.existsSync(path.join(plugin.dir, '.claude-plugin', 'plugin.json'));
       if (hasManifest) {
-        report.error(`plugins/${plugin} - marketplace.json 의 plugins[] 에 등재되지 않음`);
+        report.error(`${plugin.rel} - marketplace.json 의 plugins[] 에 등재되지 않음`);
       }
     }
   }

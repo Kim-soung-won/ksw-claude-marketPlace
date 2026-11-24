@@ -23,7 +23,7 @@ const { ROOT, repoRelative, createReporter } = require('./lib/repo');
 
 // 배포에 실려 나갈 수 있는 곳은 전부 본다. `docs`·`.claude` 가 빠져 있어
 // `docs/issues/` 의 로그 인용에 섞인 개인 경로가 오래 통과했다.
-const TARGETS = ['plugins', '.claude-plugin', 'docs', '.claude', 'CLAUDE.md', 'README.md', 'scripts'];
+const TARGETS = ['plugins', 'third-party', '.claude-plugin', 'docs', '.claude', 'CLAUDE.md', 'README.md', 'scripts'];
 
 const SCANNED_EXTENSIONS = /\.(md|json|js|mjs|cjs|ts|sh|bash|zsh|toml|yml|yaml)$/i;
 

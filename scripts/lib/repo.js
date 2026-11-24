@@ -10,6 +10,8 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
 const PLUGINS_DIR = path.join(ROOT, 'plugins');
+// 외부 원본 스킬을 감싼 플러그인. 직접 만든 플러그인과 같은 설치 단위지만 저술 규칙 대신 출처 규칙을 따른다.
+const THIRD_PARTY_DIR = path.join(ROOT, 'third-party');
 
 /**
  * 저장소 루트 기준 상대 경로로 정규화한다(Windows 구분자 포함).
@@ -104,4 +106,59 @@ function createReporter(label) {
   };
 }
 
-module.exports = { ROOT, PLUGINS_DIR, repoRelative, listPlugins, forEachPluginFile, createReporter };
+/**
+ * 디렉터리 아래 플러그인 폴더 이름 목록.
+ *
+ * @param {string} base
+ * @returns {string[]}
+ */
+function listDirs(base) {
+  if (!fs.existsSync(base)) {
+    return [];
+  }
+  return fs
+    .readdirSync(base, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
+    .map(entry => entry.name)
+    .sort();
+}
+
+/**
+ * third-party/ 아래 외부 스킬 플러그인 이름 목록.
+ *
+ * @returns {string[]}
+ */
+function listThirdPartyPlugins() {
+  return listDirs(THIRD_PARTY_DIR).filter(name =>
+    fs.existsSync(path.join(THIRD_PARTY_DIR, name, '.claude-plugin', 'plugin.json'))
+  );
+}
+
+/**
+ * 배포되는 모든 플러그인(직접 만든 것 + 외부 스킬)의 위치.
+ *
+ * @returns {Array<{name: string, dir: string, rel: string, thirdParty: boolean}>}
+ */
+function listAllPlugins() {
+  return [
+    ...listPlugins().map(name => ({ name, dir: path.join(PLUGINS_DIR, name), rel: 'plugins/' + name, thirdParty: false })),
+    ...listThirdPartyPlugins().map(name => ({
+      name,
+      dir: path.join(THIRD_PARTY_DIR, name),
+      rel: 'third-party/' + name,
+      thirdParty: true,
+    })),
+  ];
+}
+
+module.exports = {
+  ROOT,
+  PLUGINS_DIR,
+  THIRD_PARTY_DIR,
+  repoRelative,
+  listPlugins,
+  listThirdPartyPlugins,
+  listAllPlugins,
+  forEachPluginFile,
+  createReporter,
+};

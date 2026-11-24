@@ -40,6 +40,7 @@ const STEPS = [
   ['스킬 정의', [path.join(__dirname, 'validate-skills.js')]],
   ['개인 경로 유출', [path.join(__dirname, 'validate-personal-paths.js')]],
   ['CHANGELOG', [path.join(__dirname, 'validate-changelogs.js')]],
+  ['외부 스킬 출처', [path.join(__dirname, 'validate-third-party.js')]],
   // dot 리포터: 통과는 점 하나로 줄이고 실패만 자세히 편다. 커밋마다 도는 출력이라
   // 기본 spec 리포터의 케이스별 나열은 다른 검증기 결과를 밀어낸다.
   ['단위 테스트', ['--test', '--test-reporter=dot', ...TEST_FILES]],
