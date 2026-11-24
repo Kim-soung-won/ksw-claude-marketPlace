@@ -1,6 +1,6 @@
 # Codex 설치·지원 범위
 
-이 저장소의 12개 플러그인은 Claude Code와 Codex 카탈로그에 함께 등록되어 있다.
+이 저장소의 14개 플러그인은 Claude Code와 Codex 카탈로그에 함께 등록되어 있다.
 Codex에서는 플러그인 설치로 스킬을 사용하고, 격리된 작업이 필요하면 커스텀 에이전트를
 추가 등록한다. 카탈로그에 등록되었다는 사실과 실제 앱에서의 호출 검증은 구분한다.
 
@@ -20,6 +20,8 @@ Codex에서는 플러그인 설치로 스킬을 사용하고, 격리된 작업�
 | agent-factory-plugin | session-feedback + Observer MCP + 공식 훅 수집 | 1 |
 | codex-docs-plugin | codex-docs | 0 |
 | script-flow-docs-plugin | script-flow-docs | 0 |
+| browser-verify-plugin | browser-verify | 0 |
+| learning-coach-plugin | learning-coach | 0 |
 
 `claude-code-docs-plugin`은 Codex에서 **Claude Code용 정의**를 관리한다. Codex 자체의
 규격은 `codex-docs-plugin`을 사용한다. 두 제품의 모델·설정 필드를 서로 치환하지 않는다.

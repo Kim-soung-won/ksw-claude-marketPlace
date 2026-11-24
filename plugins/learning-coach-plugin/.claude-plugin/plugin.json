@@ -1,0 +1,8 @@
+{
+  "name": "learning-coach-plugin",
+  "version": "0.2.1",
+  "description": "목표 중심 개인 학습을 예시 코드·Mermaid·마무리 시험·복습으로 진행하고 프로젝트 기록과 Notion 인계를 관리하는 플러그인",
+  "author": {
+    "name": "kimsoungwon"
+  }
+}

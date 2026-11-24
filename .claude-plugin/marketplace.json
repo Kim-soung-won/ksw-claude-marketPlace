@@ -68,6 +68,11 @@
       "name": "browser-verify-plugin",
       "source": "./plugins/browser-verify-plugin",
       "description": "실행 중인 웹 화면을 임시 Chrome 으로 열어 점검하는 절차를 제공하는 플러그인 — 빌드 로드 확인, 키보드·포커스·폼 동작 측정, 창 폭별 레이아웃 넘침과 layout shift 측정, 스크린샷 판단 기준, 서버 데이터를 바꾸지 않는 안전 장치, 근거를 구분한 보고 형식과 점검마다 쌓는 개선 기록을 담는다"
+    },
+    {
+      "name": "learning-coach-plugin",
+      "source": "./plugins/learning-coach-plugin",
+      "description": "목표 중심 개인 학습을 예시 코드·Mermaid·마무리 시험·복습으로 진행하고 프로젝트 기록과 Notion 인계를 관리하는 플러그인"
     }
   ]
 }
